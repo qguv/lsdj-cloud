@@ -1,0 +1,16 @@
+body {
+    background-color: black;
+    color: white;
+    font-family: "Droid Sans Mono", monospace;
+    margin: 0;
+}
+
+div.content {
+    background-color: #333;
+    max-width: 600px;
+    margin: 10px auto 0;
+    padding: 10px 30px;
+    border-radius: 7px 7px 0 0;
+    height: 100%;
+    box-sizing: border-box;
+}

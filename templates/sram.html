@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <link rel="stylesheet" type="text/css" href="static/style.css">
+  </head>
+  <body>
+    <div class="content">
+
+      <h1>{{ '' if sram_filenames else 'No ' }}SRAM files</h1>
+      <ol>
+      {% for sram_filename in sram_filenames %}
+        <li>{{ sram_filename }}</li>
+      {% endfor %}
+      </ol>
+
+      <form action="{{ url_for('new_sram') }}" method="POST" enctype="multipart/form-data">
+        <h3>Upload new SRAM file</h3>
+
+        <label for="sram-input">SRAM file</label>
+        <input id="sram-input" type="file">
+
+        <br />
+
+        <input type="submit" text="Submit">
+      </form>
+
+    </div>
+  </body>
+</html>
