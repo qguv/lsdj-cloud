@@ -1,16 +1,84 @@
-body {
-    background-color: black;
-    color: white;
-    font-family: "Droid Sans Mono", monospace;
-    margin: 0;
+* {
+  box-sizing: border-box;
+  font-family: "Droid Sans Mono", monospace;
+  color: white;
+  transition-duration: 300ms;
 }
 
-div.content {
-    background-color: #333;
-    max-width: 600px;
-    margin: 10px auto 0;
-    padding: 10px 30px;
-    border-radius: 7px 7px 0 0;
-    height: 100%;
-    box-sizing: border-box;
+body {
+  background-color: black;
+  margin: 0;
+}
+
+.content {
+  background-color: #333;
+  max-width: 600px;
+  margin: 10px auto;
+  padding: 10px 30px;
+  border-radius: 7px 7px 0 0;
+  min-height: 95vh;
+  box-sizing: border-box;
+}
+
+input {
+  background-color: rgb(0, 0, 0, 0.2);
+  transition-property: border-color;
+  border: 3px solid grey;
+  border-radius: 7px;
+  padding: 0.5em 1em;
+}
+
+input:focus {
+  border-color: white;
+}
+
+form .field {
+  margin: 10px 0;
+  width: 100%;
+}
+
+form .field input {
+  width: auto;
+}
+
+button, input[type="submit"] {
+  background-color: rgb(0, 0, 0, 0.2);
+  padding: 0.5em 1em;
+  font-weight: bold;
+  border-radius: 7px;
+  border: 3px solid grey;
+  color: white;
+  margin: 0;
+  transition-property: border-color;
+  transition-duration: 300ms;
+}
+
+form {
+  border-left: 3px solid grey;
+  padding: 0.5em 0 0.5em 1em;
+  margin: 2em 0;
+}
+
+button:hover, input[type="submit"]:hover {
+  border-color: white;
+}
+
+button:active, input[type="submit"]:active {
+  border-color: transparent;
+}
+
+h1 {
+  margin: 1em 0 0;
+}
+
+ul.menu {
+  list-style: none;
+  padding: 0;
+  display: inline-block;
+  margin: 0;
+}
+
+ul.menu li {
+  float: left;
+  margin-right: 1em;
 }
