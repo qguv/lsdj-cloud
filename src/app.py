@@ -42,5 +42,3 @@ def get_sram(filename):
     with store.get(filename) as f:
         # FIXME does this work
         return send_file(f, mimetype="application/octet-stream")
-
-app.run(debug=True)
