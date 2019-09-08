@@ -38,7 +38,7 @@ p, li {
   text-align: justify;
 }
 
-input {
+button, input {
   font-size: 1em;
   line-height: 1em;
 }
@@ -85,13 +85,15 @@ button, input, label {
 }
 
 /* inputs and labels should look good together */
-label {
+form .field {
+  margin: 10px 0;
+} form .field label {
   border-color: transparent;
   color: black;
   background-color: white;
   border-top-right-radius: 0px;
   border-bottom-right-radius: 0px;
-} input {
+} form .field button, form .field input {
   border-top-left-radius: 0px;
   border-bottom-left-radius: 0px;
 }
@@ -132,10 +134,6 @@ input:focus, input:active {
     #db9dbe 80%
   );
   border-image-slice: 1;
-}
-
-form .field {
-  margin: 10px 0;
 }
 
 footer {
