@@ -3,27 +3,47 @@
 <head>
   <meta charset="utf-8">
   <link href="static/style.css" rel="stylesheet" type="text/css">
-  <title>{% block title %}{% endblock title %}</title>
+  <title>LSDj Cloud » {% block title %}{% endblock title %}</title>
 </head>
 <body>
-  <div class="content">
-    <h1><a href="{{ url_for('root') }}">LSDj Cloud</a></h1>
-    <ul class='menu'>
-      <li><a href="{{ url_for('sram') }}">SRAM</a></li>
-      <li>Tracks</li>
-      <li>Playlists</li>
+  <div class="container">
+    <ul class="bare flash">
+      {%- with messages = get_flashed_messages() %}
+      {%- for message in messages if message %}
+      <li>{{ message }}</li>
+      {%- endfor %}
+      {%- endwith %}
     </ul>
-    <ul>
-      {% with messages = get_flashed_messages() -%}
-        {% if messages -%}
-          {% for message in messages -%}
-            <li>{{ message }}</li>
-          {% endfor %}
-        {% endif %}
-      {% endwith %}
-    </ul>
-
-    {% block content %}{% endblock content %}
+    <div class="content">
+      <h1><a href="{{ url_for('root') }}">LSDj Cloud</a></h1>
+      <ul class="bare horizontal">
+        <li><a href="{{ url_for('sram') }}">SRAM</a></li>
+        <li>Tracks</li>
+        <li>Playlists</li>
+        {%- if 't' in session %}
+        <li>
+          {{ session['u'] }}
+          (<a href="{{ url_for('logout') }}">log out</a>)
+        </li>
+        {%- else %}
+        <li><a href="{{ url_for('login') }}">Log in</a></li>
+        {%- endif %}
+      </ul>
+      <span>
+      </span>
+      {% block content %}{% endblock content %}
+      <footer>
+        <ul class="bare horizontal center">
+          <li>LSDj Cloud</li>
+          <li>
+            <a href="https://github.com/qguv/lsdj-cloud">source code</a>
+          </li>
+          <li>
+            made by <a href="https://quint.guvernator.net">qguv</a>
+          </li>
+        </ul>
+      </footer>
+    </div>
   </div>
 </body>
 </html>

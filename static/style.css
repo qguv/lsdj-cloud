@@ -1,84 +1,150 @@
+:root {
+  --flash-font-size: 16px;
+  --flash-vertical-padding: 8px;
+  --content-top-margin: 16px;
+  --content-padding: 32px;
+}
+
 * {
   box-sizing: border-box;
   font-family: "Droid Sans Mono", monospace;
   color: white;
-  transition-duration: 300ms;
 }
 
 body {
-  background-color: black;
+  background: linear-gradient(
+    45deg,
+    #c4e17f80      20%,
+    #f7fdca80 20%  40%,
+    #fad07180 40%  60%,
+    #f0766b80 60%  80%,
+    #db9dbe80 80%
+  ) center/contain, linear-gradient(black, black);
   margin: 0;
 }
 
-.content {
+.container {
   background-color: #333;
-  max-width: 600px;
-  margin: 10px auto;
-  padding: 10px 30px;
-  border-radius: 7px 7px 0 0;
-  min-height: 95vh;
-  box-sizing: border-box;
+  max-width: 650px;
+  margin: var(--content-top-margin) auto 0;
+  min-height: calc(100vh - var(--content-top-margin))
+}
+
+.content {
+  padding: calc(var(--content-padding) - var(--flash-vertical-padding)) var(--content-padding) var(--content-padding);
+}
+
+p, li {
+  text-align: justify;
 }
 
 input {
-  background-color: rgb(0, 0, 0, 0.2);
-  transition-property: border-color;
-  border: 3px solid grey;
-  border-radius: 7px;
-  padding: 0.5em 1em;
+  font-size: 1em;
+  line-height: 1em;
 }
 
-input:focus {
+h1 {
+  margin: 0;
+}
+
+h2 {
+  margin: 1em 0 0;
+}
+
+button {
+  font-weight: bold;
+} button:hover {
   border-color: white;
+} button:active {
+  background-color: rgb(255, 255, 255, 0.5);
+}
+
+ul {
+  margin: 0;
+} ul li {
+  margin: 0.5em 0;
+}
+
+/* destyled ul elements for semantics and accessibility */
+ul.bare {
+  list-style: none;
+  display: inline-block;
+  padding: 0;
+} ul.bare, ul.bare li {
+  margin: 0;
+}
+
+/* losenges */
+button, input, label {
+  border: 3px solid rgb(255, 255, 255, 0.2);
+  border-radius: 8px;
+  background-color: rgb(0, 0, 0, 0.2);
+  padding: 0.5em 1em;
+  transition-property: border-color, border-image;
+  transition-duration: 300ms;
+}
+
+/* inputs and labels should look good together */
+label {
+  border-color: transparent;
+  color: black;
+  background-color: white;
+  border-top-right-radius: 0px;
+  border-bottom-right-radius: 0px;
+} input {
+  border-top-left-radius: 0px;
+  border-bottom-left-radius: 0px;
+}
+
+/* horizontal menu */
+ul.horizontal li {
+  float: left;
+} ul.horizontal li:not(:last-child) {
+  margin-right: 1em;
+  padding-right: 1em;
+  border-right: 1px solid white;
+}
+
+/* Flask.flash messages */
+ul.flash {
+  width: 100%;
+  font-size: var(--flash-font-size);
+  min-height: var(--flash-vertical-padding);
+  font-weight: bold;
+  line-height: var(--flash-font-size);
+  display: block;
+} ul.flash li {
+  text-align: center;
+  padding: var(--flash-vertical-padding) var(--content-padding);
+  background-color: rgb(63, 127, 255, 0.7);
+} .container, ul.flash li {
+  border-radius: 15px 15px 0 0;
+}
+
+/* multicolor selected inputs */
+input:focus, input:active {
+  border-image: linear-gradient(
+    to right,
+    #c4e17f      20%,
+    #f7fdca 20%  40%,
+    #fad071 40%  60%,
+    #f0766b 60%  80%,
+    #db9dbe 80%
+  );
+  border-image-slice: 1;
 }
 
 form .field {
   margin: 10px 0;
-  width: 100%;
 }
 
-form .field input {
-  width: auto;
-}
-
-button, input[type="submit"] {
-  background-color: rgb(0, 0, 0, 0.2);
-  padding: 0.5em 1em;
-  font-weight: bold;
-  border-radius: 7px;
-  border: 3px solid grey;
-  color: white;
-  margin: 0;
-  transition-property: border-color;
-  transition-duration: 300ms;
-}
-
-form {
-  border-left: 3px solid grey;
-  padding: 0.5em 0 0.5em 1em;
-  margin: 2em 0;
-}
-
-button:hover, input[type="submit"]:hover {
-  border-color: white;
-}
-
-button:active, input[type="submit"]:active {
-  border-color: transparent;
-}
-
-h1 {
-  margin: 1em 0 0;
-}
-
-ul.menu {
-  list-style: none;
-  padding: 0;
-  display: inline-block;
-  margin: 0;
-}
-
-ul.menu li {
-  float: left;
-  margin-right: 1em;
+footer {
+  text-align: center;
+  display: block;
+  max-width: 90%;
+  margin: 2em auto 0;
+  padding: 1em 0 0;
+  border-top: 1px solid rgb(255, 255, 255, 0.2);
+  color: rgb(255, 255, 255, 0.3);
+  font-size: 75%;
 }

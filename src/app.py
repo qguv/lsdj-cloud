@@ -3,15 +3,19 @@
 from . import auth
 from . import store
 
-from flask import Flask, request, redirect, url_for, render_template, flash, send_file
+from flask import request, redirect, url_for, render_template, flash, send_file
+from flask import Flask as _Flask
 
 from pathlib import Path
+
+class Flask(_Flask):
+    jinja_options = _Flask.jinja_options.copy()
 
 app = Flask(__name__, static_folder='../static', template_folder='../templates')
 
 @app.route('/')
 def root():
-    return render_template('root.html', auth=auth)
+    return render_template('root.html')
 
 @app.route('/login', methods=('GET', 'POST'))
 @auth.login_form('root')
