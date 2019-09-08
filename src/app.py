@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
 
-import auth
-import store
+from . import auth
+from . import store
 
 from flask import Flask, request, redirect, url_for, render_template, flash, send_file
 
 from pathlib import Path
 
-app = Flask(__name__)
-app.secret_key = r'O2qWx7g1mcuUtpdgH6O988tS9AfPsK7R6W2dGYZlGViaRxIv'
+app = Flask(__name__, static_folder='../static', template_folder='../templates')
 
 @app.route('/')
 def root():
