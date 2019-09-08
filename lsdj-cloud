@@ -1,9 +1,22 @@
 #!/usr/bin/env python3
 
+import boto3
+from flask import g
+
 from src.app import app
-from config import secret_key
+from src import store
+import config
 
 from sys import argv
 
-app.secret_key = secret_key
+# set up flask app
+app.secret_key = config.secret_key
+
+# TODO this should somehow be elsewhere
+@app.before_request
+def bucket_factory():
+    g.s3 = boto3.resource('s3', **config.s3)
+    g.client = boto3.client('s3', **config.s3)
+    g.bucket = g.s3.Bucket(config.bucket_name)
+
 app.run(debug='--debug' in argv[1:])

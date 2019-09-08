@@ -2,24 +2,25 @@
 {% block title %}{{ '' if sram_filenames else 'No ' }}SRAM files{% endblock title %}
 {% block content %}
 
-<p>Here, you can view past SRAM uploads or upload a new SRAM file.</p>
+<p>Here, you can upload a new SRAM file or view past SRAM uploads.</p>
 
 <ol>
-  {%- for sram_filename in sram_filenames %}
+  {%- for file in files %}
   <li>
-    <a href="{{ url_for('get_sram', filename=sram_filename) }}">
-      {{ sram_filename }}
+    <a href="{{ url_for('get_sram', filename=file) }}">
+      {{ file }}
     </a>
   </li>
   {%- endfor %}
 </ol>
 
+In use: {{ megabytes }}&nbsp;MB
+
 <form method="POST" enctype="multipart/form-data">
   <div class="field">
     <label for="sram">Choose SRAM file</label>
     <input id="sram" name="sram" type="file" hidden>
-    <button>Submit</button>
+    <button>Upload</button>
   </div>
 </form>
-
 {% endblock content %}
