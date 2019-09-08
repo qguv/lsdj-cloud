@@ -3,6 +3,22 @@
   --flash-vertical-padding: 8px;
   --content-top-margin: 16px;
   --content-padding: 32px;
+  --diagonal-colors: linear-gradient(
+    45deg,
+    #c4e17f80      20%,
+    #f7fdca80 20%  40%,
+    #fad07180 40%  60%,
+    #f0766b80 60%  80%,
+    #db9dbe80 80%
+  );
+  --horizontal-colors: linear-gradient(
+    to right,
+    #c4e17f      20%,
+    #f7fdca 20%  40%,
+    #fad071 40%  60%,
+    #f0766b 60%  80%,
+    #db9dbe 80%
+  );
 }
 
 * {
@@ -12,19 +28,13 @@
 }
 
 body {
-  background: linear-gradient(
-    45deg,
-    #c4e17f80      20%,
-    #f7fdca80 20%  40%,
-    #fad07180 40%  60%,
-    #f0766b80 60%  80%,
-    #db9dbe80 80%
-  ) center/contain, linear-gradient(black, black);
+  background: var(--diagonal-colors), linear-gradient(black, black);
   margin: 0;
 }
 
 .container {
   background-color: #333;
+  border: 3px solid grey;
   max-width: 650px;
   margin: var(--content-top-margin) auto 0;
   min-height: calc(100vh - var(--content-top-margin))
@@ -38,7 +48,7 @@ p, li {
   text-align: justify;
 }
 
-button, input {
+button, input, label {
   font-size: 1em;
   line-height: 1em;
 }
@@ -51,9 +61,7 @@ h2 {
   margin: 1em 0 0;
 }
 
-button {
-  font-weight: bold;
-} button:hover {
+button:hover {
   border-color: white;
 } button:active {
   background-color: rgb(255, 255, 255, 0.5);
@@ -78,24 +86,48 @@ ul.bare {
 button, input, label {
   border: 3px solid rgb(255, 255, 255, 0.2);
   border-radius: 8px;
-  background-color: rgb(0, 0, 0, 0.2);
   padding: 0.5em 1em;
-  transition-property: border-color, border-image;
+  transition-property: border-color, background-color;
   transition-duration: 300ms;
 }
 
-/* inputs and labels should look good together */
-form .field {
-  margin: 10px 0;
-} form .field label {
+button, label {
   border-color: transparent;
   color: black;
   background-color: white;
+}
+
+input {
+  background-color: rgb(0, 0, 0, 0.2);
+}
+
+/* inputs and labels should look good together */
+form {
+  display: grid;
+  margin: 1em 0;
+  grid-template-columns: [label] auto [input] 1fr;
+  justify-content: left;
+  grid-gap: 0.5em;
+} form label, form > div:last-child button {
+  grid-column: label;
+  justify-self: right;
   border-top-right-radius: 0px;
   border-bottom-right-radius: 0px;
-} form .field button, form .field input {
+} form button, form input {
+  grid-column: input;
+} form button:not(:last-child), form input {
   border-top-left-radius: 0px;
   border-bottom-left-radius: 0px;
+} form button:last-child {
+  grid-column: span 2;
+  font-weight: bold;
+  padding-left: 80%;
+  padding-right: 0;
+  border-color: transparent;
+  color: transparent;
+  background: var(--horizontal-colors) padding-box;
+} form button:last-child:hover {
+  color: black;
 }
 
 /* horizontal menu */
@@ -118,22 +150,13 @@ ul.flash {
 } ul.flash li {
   text-align: center;
   padding: var(--flash-vertical-padding) var(--content-padding);
-  background-color: rgb(63, 127, 255, 0.7);
+  background-color: rgba(63, 127, 255, 0.8);
 } .container, ul.flash li {
   border-radius: 15px 15px 0 0;
 }
 
-/* multicolor selected inputs */
 input:focus, input:active {
-  border-image: linear-gradient(
-    to right,
-    #c4e17f      20%,
-    #f7fdca 20%  40%,
-    #fad071 40%  60%,
-    #f0766b 60%  80%,
-    #db9dbe 80%
-  );
-  border-image-slice: 1;
+  border-color: white;
 }
 
 footer {

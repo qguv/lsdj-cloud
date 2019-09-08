@@ -17,10 +17,12 @@
 In use: {{ megabytes }}&nbsp;MB
 
 <form method="POST" enctype="multipart/form-data">
-  <div class="field">
-    <label for="sram">Choose SRAM file</label>
-    <input id="sram" name="sram" type="file" hidden>
-    <button>Upload</button>
-  </div>
+
+  <label for="sram">Choose SRAM file</label>
+  <input id="sram" name="sram" type="file" hidden>
+  <input disabled>
+
+  <button>Submit &rarr;</button>
+
 </form>
 {% endblock content %}
