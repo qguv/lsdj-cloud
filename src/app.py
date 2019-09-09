@@ -75,8 +75,9 @@ def sram_upload():
 @app.route('/track')
 @auth.required
 def tracks():
+    tracks = sorted(store.items('track').items())
     mb = f"{store.usage('track') / 1000:.1f}"
-    return render_template('tracks.html', tracks=store.items('track'), mb=mb)
+    return render_template('tracks.html', tracks=tracks, mb=mb)
 
 @app.route('/track/<name>')
 @auth.required

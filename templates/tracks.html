@@ -8,11 +8,13 @@
 </p>
 
 <ol>
-  {%- for name in tracks.keys() %}
+  {%- for name, obj in tracks %}
   <li>
     <a href="{{ url_for('track', name=name) }}">
       {{ name }}
     </a>
+    {#- TODO display: (inline-)grid; #}
+    ({{ '{:.1f}'.format(obj.size / 1000) }}&nbsp;MB)
   </li>
   {%- endfor %}
 </ol>

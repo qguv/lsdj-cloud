@@ -101,6 +101,7 @@ input {
 }
 
 /* inputs and labels should look good together */
+/* TODO: bring back some color */
 form {
   display: grid;
   grid-template-columns: [label] auto [input] 1fr;
