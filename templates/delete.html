@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% block title %}Tracks{% endblock title %}
+{% block content %}
+
+<p>Deleting {{ resource }} permanently! Are you sure?</p>
+
+<form method="POST" enctype="multipart/form-data">
+  <button>Delete it forever</button>
+</form>
+
+{% endblock content %}

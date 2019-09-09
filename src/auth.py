@@ -3,10 +3,9 @@ from urllib.parse import urlparse, parse_qs
 
 from functools import wraps
 
-def deauth(response):
+def deauth():
     session.clear()
     flash("Logged out.")
-    return response
 
 def login_form(success_redirect_route: str):
     def decorator(wrapped):

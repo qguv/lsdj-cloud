@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block title %}Tracks{% endblock title %}
+{% block content %}
+
+<p>
+  Here, you can view your LSDj tracks that were extracted when you uploaded
+  your SRAM files.
+</p>
+
+<ol>
+  {%- for name in tracks.keys() %}
+  <li>
+    <a href="{{ url_for('track', name=name) }}">
+      {{ name }}
+    </a>
+  </li>
+  {%- endfor %}
+</ol>
+
+In use: {{ mb }}&nbsp;MB
+{% endblock content %}

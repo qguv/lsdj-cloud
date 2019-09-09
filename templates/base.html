@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=435, user-scalable=0">
-  <link href="static/style.css" rel="stylesheet" type="text/css">
+  <link href="/static/style.css" rel="stylesheet" type="text/css">
   <title>LSDj Cloud » {% block title %}{% endblock title %}</title>
 </head>
 <body>
@@ -18,8 +18,8 @@
     <div class="content">
       <h1><a href="{{ url_for('root') }}">LSDj Cloud</a></h1>
       <ul class="bare horizontal">
-        <li><a href="{{ url_for('sram') }}">SRAM</a></li>
-        <li>Tracks</li>
+        <li><a href="{{ url_for('srams') }}">SRAMs</a></li>
+        <li><a href="{{ url_for('tracks') }}">Tracks</a></li>
         <li>Playlists</li>
         {%- if 't' in session %}
         <li>
