@@ -54,3 +54,7 @@ def delete_sram(filename):
     store.delete('sram', filename)
     flash(f"Deleted {filename}.")
     return redirect(url_for('sram'))
+
+@app.route('/long')
+def long():
+    return render_template('long.html')

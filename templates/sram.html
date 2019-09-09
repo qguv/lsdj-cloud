@@ -19,10 +19,11 @@ In use: {{ megabytes }}&nbsp;MB
 <form method="POST" enctype="multipart/form-data">
 
   <label for="sram">Choose SRAM file</label>
-  <input id="sram" name="sram" type="file" hidden>
+  {#- TODO: put something in here for the JS users #}
+  <input hidden aria-hidden="false" id="sram" name="sram" type="file">
   <input disabled>
 
-  <button>Submit &rarr;</button>
+  <button>Submit</button>
 
 </form>
 {% endblock content %}

@@ -1,7 +1,7 @@
 :root {
   --flash-font-size: 16px;
   --flash-vertical-padding: 8px;
-  --content-top-margin: 16px;
+  --content-margin: 16px;
   --content-padding: 32px;
   --diagonal-colors: linear-gradient(
     45deg,
@@ -30,14 +30,20 @@
 body {
   background: var(--diagonal-colors), linear-gradient(black, black);
   margin: 0;
+  padding: 0 var(--content-margin);
 }
 
 .container {
-  background-color: #333;
-  border: 3px solid grey;
+  background: linear-gradient(
+    rgba(32, 32, 32, 0.95),
+    92%,
+    rgba(64, 64, 64, 0.7)
+  );
   max-width: 650px;
-  margin: var(--content-top-margin) auto 0;
-  min-height: calc(100vh - var(--content-top-margin))
+  margin: var(--content-margin) auto 0;
+  min-height: calc(100vh - var(--content-margin))
+} .container, ul.flash li {
+  border-radius: 10px 10px 0 0;
 }
 
 .content {
@@ -48,23 +54,12 @@ p, li {
   text-align: justify;
 }
 
-button, input, label {
-  font-size: 1em;
-  line-height: 1em;
-}
-
 h1 {
   margin: 0;
 }
 
 h2 {
   margin: 1em 0 0;
-}
-
-button:hover {
-  border-color: white;
-} button:active {
-  background-color: rgb(255, 255, 255, 0.5);
 }
 
 ul {
@@ -84,60 +79,63 @@ ul.bare {
 
 /* losenges */
 button, input, label {
-  border: 3px solid rgb(255, 255, 255, 0.2);
+  border: 3px solid transparent;
+  font-size: 1em;
+  line-height: 1em;
   border-radius: 8px;
-  padding: 0.5em 1em;
-  transition-property: border-color, background-color;
-  transition-duration: 300ms;
+  padding: 0.6em 1em;
 }
 
 button, label {
-  border-color: transparent;
   color: black;
   background-color: white;
 }
 
 input {
+  border-color: rgb(255, 255, 255, 0.2);
   background-color: rgb(0, 0, 0, 0.2);
+  transition-property: border-color, background-color;
+  transition-duration: 300ms;
+} input:focus, input:active {
+  border-color: white;
 }
 
 /* inputs and labels should look good together */
 form {
   display: grid;
-  margin: 1em 0;
   grid-template-columns: [label] auto [input] 1fr;
-  justify-content: left;
-  grid-gap: 0.5em;
-} form label, form > div:last-child button {
-  grid-column: label;
+  grid-gap: 0.5em 0;
+  justify-content: center;
+  justify-items: center;
+  margin: 1em 0;
+} form input {
+  width: 100%;
+} form input {
+  border-left-width: 0;
+  justify-self: left;
+  border-top-left-radius: 0px;
+  border-bottom-left-radius: 0px;
+} form label {
   justify-self: right;
   border-top-right-radius: 0px;
   border-bottom-right-radius: 0px;
-} form button, form input {
-  grid-column: input;
-} form button:not(:last-child), form input {
-  border-top-left-radius: 0px;
-  border-bottom-left-radius: 0px;
-} form button:last-child {
+} form button {
   grid-column: span 2;
-  font-weight: bold;
-  padding-left: 80%;
-  padding-right: 0;
-  border-color: transparent;
-  color: transparent;
-  background: var(--horizontal-colors) padding-box;
-} form button:last-child:hover {
-  color: black;
 }
 
 /* horizontal menu */
 ul.horizontal li {
   float: left;
-} ul.horizontal li:not(:last-child) {
-  margin-right: 1em;
-  padding-right: 1em;
-  border-right: 1px solid white;
+} ul.horizontal li {
+  padding: 0 1em;
+  border-left: 1px solid white;
+} ul.horizontal li:first-child {
+  padding-left: 0;
+  border-left: none;
+} ul.horizontal li:last-child {
+  padding-right: 0;
 }
+
 
 /* Flask.flash messages */
 ul.flash {
@@ -151,12 +149,6 @@ ul.flash {
   text-align: center;
   padding: var(--flash-vertical-padding) var(--content-padding);
   background-color: rgba(63, 127, 255, 0.8);
-} .container, ul.flash li {
-  border-radius: 15px 15px 0 0;
-}
-
-input:focus, input:active {
-  border-color: white;
 }
 
 footer {
