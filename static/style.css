@@ -5,11 +5,11 @@
   --content-padding: 32px;
   --diagonal-colors: linear-gradient(
     45deg,
-    #c4e17f80      20%,
-    #f7fdca80 20%  40%,
-    #fad07180 40%  60%,
-    #f0766b80 60%  80%,
-    #db9dbe80 80%
+    #c4e17fb0      20%,
+    #f7fdcab0 20%  40%,
+    #fad071b0 40%  60%,
+    #f0766bb0 60%  80%,
+    #db9dbeb0 80%
   );
   --horizontal-colors: linear-gradient(
     to right,
