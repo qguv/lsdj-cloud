@@ -32,13 +32,13 @@ def logout():
     auth.deauth()
     return redirect(url_for('root'))
 
-@app.route('/sram')
+@app.route('/srams')
 @auth.required
 def srams():
     mb = f"{store.usage('sram') / 1000:.1f}"
     return render_template('srams.html', srams=store.items('sram'), mb=mb)
 
-@app.route('/sram', methods=('POST',))
+@app.route('/srams', methods=('POST',))
 @auth.required
 def sram_upload():
     if request.method == 'POST':
@@ -69,14 +69,14 @@ def sram_upload():
         # TODO you should optionally be able to fix an old version of a track on a playlist
         return redirect(url_for('srams'))
 
-@app.route('/track')
+@app.route('/tracks')
 @auth.required
 def tracks():
     tracks = sorted(store.items('track').items())
     mb = f"{store.usage('track') / 1000:.1f}"
     return render_template('tracks.html', tracks=tracks, mb=mb)
 
-@app.route('/track/<name>')
+@app.route('/tracks/<name>')
 @auth.required
 def track(name):
     store.assert_exists('track', name)
@@ -84,34 +84,34 @@ def track(name):
     mb = f"{obj.size / 1000:.1f}"
     return render_template('track.html', name=name, mb=mb)
 
-@app.route('/sram/<filename>/download')
+@app.route('/srams/<name>/download')
 @auth.required
-def sram_download(filename):
-    return redirect(store.get_link('sram', filename))
+def sram_download(name):
+    return redirect(store.get_link('sram', name))
 
-@app.route('/track/<name>/download')
+@app.route('/tracks/<name>/download')
 @auth.required
 def track_download(name):
     return redirect(store.get_link('track', name))
 
 # DEBUG
-@app.route('/sram/<filename>/delete', methods=('GET', 'POST'))
+@app.route('/srams/<name>/delete', methods=('GET', 'POST'))
 @auth.required
 @misc.confirm_delete("SRAM")
-def sram_delete(filename):
-    store.delete('sram', filename)
+def sram_delete(name):
+    store.delete('sram', name)
     return redirect(url_for('srams'))
 
 # DEBUG
-@app.route('/track/<filename>/delete', methods=('GET', 'POST'))
+@app.route('/tracks/<name>/delete', methods=('GET', 'POST'))
 @auth.required
 @misc.confirm_delete("track")
-def track_delete(filename):
-    store.delete('track', filename)
+def track_delete(name):
+    store.delete('track', name)
     return redirect(url_for('tracks'))
 
 # DEBUG
-@app.route('/sram/delete', methods=('GET', 'POST'))
+@app.route('/srams/delete', methods=('GET', 'POST'))
 @auth.required
 @misc.confirm_delete("all SRAMs")
 def srams_delete():
@@ -120,7 +120,7 @@ def srams_delete():
     return redirect(url_for('srams'))
 
 # DEBUG
-@app.route('/track/delete', methods=('GET', 'POST'))
+@app.route('/tracks/delete', methods=('GET', 'POST'))
 @auth.required
 @misc.confirm_delete("all tracks")
 def tracks_delete():
@@ -132,10 +132,3 @@ def tracks_delete():
 @app.route('/long')
 def long():
     return render_template('long.html')
-
-# DEBUG
-@app.route('/test/split')
-def split_song():
-    with liblsdj.split('/tmp/lsdj/lsdj_20190724_extra.sav') as d:
-        pre = d + '\n' + '\n'.join(str(p.name) for p in Path(d).glob('**/*'))
-    return render_template('pre.html', pre=pre)
