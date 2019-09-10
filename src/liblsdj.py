@@ -2,8 +2,8 @@ from subprocess import run
 from tempfile import TemporaryDirectory
 from pathlib import Path
 
-binpath = './deps/linux-amd64/bin/'
-export = binpath + 'lsdsng-export'
+liblsdj_bin = Path(__file__).parent.parent / 'deps/linux-amd64/bin'
+export = liblsdj_bin / 'lsdsng-export'
 
 def split(sav_path: str) -> TemporaryDirectory:
     d = TemporaryDirectory()
@@ -17,7 +17,6 @@ def split(sav_path: str) -> TemporaryDirectory:
 
 def peek(sav_path):
     res = run([export, '-up', sav_path], check=True, capture_output=True).stdout.decode()
-    print(res)
     for song in res.strip().split('\n')[1:]:
         try:
             no = int(song[0:4].strip())
