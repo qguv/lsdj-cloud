@@ -5,15 +5,12 @@ from . import store
 from . import liblsdj
 from . import misc
 
-from flask import request, Response, redirect, url_for, render_template, flash, send_file
-from flask import Flask as _Flask
+from flask import request, redirect, url_for, render_template, flash
+from flask import Flask
 
 from pathlib import Path
 from werkzeug import exceptions
 from werkzeug.utils import secure_filename
-
-class Flask(_Flask):
-    jinja_options = _Flask.jinja_options.copy()
 
 app = Flask(__name__, static_folder='../static', template_folder='../templates')
 
