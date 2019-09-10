@@ -16,22 +16,22 @@
       {%- endwith %}
     </ul>
     <div class="content">
-      <h1><a href="{{ url_for('root') }}">LSDj Cloud</a></h1>
-      <ul class="bare horizontal">
-        <li><a href="{{ url_for('srams') }}">SRAMs</a></li>
-        <li><a href="{{ url_for('tracks') }}">Tracks</a></li>
-        <li><a href="#">Playlists</a></li>
-        {%- if 't' in session %}
-        <li>
-          {{ session['u'] }}
-          (<a href="{{ url_for('logout') }}">log out</a>)
-        </li>
-        {%- else %}
-        <li><a href="{{ url_for('login') }}">Log in</a></li>
-        {%- endif %}
-      </ul>
-      <span>
-      </span>
+      <header>
+        <h1><a href="{{ url_for('root') }}">LSDj Cloud</a></h1>
+        <ul class="bare horizontal">
+          <li><a href="{{ url_for('srams') }}">SRAMs</a></li>
+          <li><a href="{{ url_for('tracks') }}">Tracks</a></li>
+          <li><a href="#">Playlists</a></li>
+          {%- if 't' in session %}
+          <li>
+            {{ session['u'] }}
+            (<a href="{{ url_for('logout') }}">log out</a>)
+          </li>
+          {%- else %}
+          <li><a href="{{ url_for('login') }}">Log in</a></li>
+          {%- endif %}
+        </ul>
+      </header>
       {% block content %}{% endblock content %}
       <footer>
         <ul class="bare horizontal center">

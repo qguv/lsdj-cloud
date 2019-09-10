@@ -1,3 +1,9 @@
+@media only screen and (min-width: 550px) {
+  p, li {
+    text-align: justify;
+  }
+}
+
 :root {
   --flash-font-size: 16px;
   --flash-vertical-padding: 8px;
@@ -50,8 +56,8 @@ body {
   padding: calc(var(--content-padding) - var(--flash-vertical-padding)) var(--content-padding) var(--content-padding);
 }
 
-p, li {
-  text-align: justify;
+header {
+  margin-bottom: 1.5em;
 }
 
 h1 {
