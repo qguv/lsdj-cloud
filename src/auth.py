@@ -1,4 +1,4 @@
-from flask import request, redirect, url_for, flash, session, escape
+from flask import request, redirect, url_for, flash, session, escape, g
 from urllib.parse import urlparse, parse_qs
 
 from functools import wraps
