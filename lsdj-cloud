@@ -18,5 +18,6 @@ def bucket_factory():
     g.s3 = boto3.resource('s3', **config.s3)
     g.client = boto3.client('s3', **config.s3)
     g.bucket = g.s3.Bucket(config.bucket_name)
+    g.valid_token = config.valid_token
 
 app.run(debug='--debug' in argv[1:])

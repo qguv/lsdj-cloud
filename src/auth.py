@@ -14,9 +14,9 @@ def login_form(success_redirect_route: str):
             if request.method == 'POST':
 
                 # FIXME actually check credentials
-                if request.form.get('username') and request.form.get('password'):
+                if request.form.get('username') and request.form.get('password') == g.valid_token:
                     session['u'] = request.form['username']
-                    session['t'] = "fake token" # FIXME generate this
+                    session['t'] = g.valid_token # FIXME
                     flash(f"Welcome, {escape(session['u'])}.")
                     try:
                         return_to = parse_qs(urlparse(request.referrer).query)['r'][0]
