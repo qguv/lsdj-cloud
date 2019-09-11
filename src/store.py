@@ -11,10 +11,15 @@ from tempfile import NamedTemporaryFile
 def _new_filename() -> str:
     return f"{str(time()).replace('.', '_')}.sram"
 
-def _check_secure_filename(filename):
-    if filename != secure_filename(filename):
-        raise exceptions.BadRequest(f"File {filename} is not secure!")
-    return filename
+def _check_secure_filename(filenames: str or list([str])):
+    if isinstance(filenames, str):
+        _check_secure_filename([filenames])
+        return filenames
+
+    for filename in filenames:
+        if filename != secure_filename(filename):
+            raise exceptions.BadRequest(f"File {filename} is not secure!")
+    return filenames
 
 def _with_trailing_slash(path):
     if path.endswith('/'):
@@ -54,18 +59,28 @@ def memo(f):
     return wrapping
 
 @memo
-def items(path) -> dict(key="boto3.S3.ObjectSummary"):
+def items(path) -> dict(name="boto3.S3.ObjectSummary"):
     path = _with_trailing_slash(path)
     trim = len(path)
     return {obj.key[trim:]: obj for obj in g.bucket.objects.filter(Prefix=path)}
 
-def assert_exists(path, filename: str) -> bool:
-    if filename not in items(path):
-        raise exceptions.NotFound(f"{path} file {filename} not found")
+def assert_exists(path, filenames: str or [str]) -> bool:
+    if isinstance(filenames, str):
+        filenames = [filenames]
 
-def assert_unused(path, filename: str) -> bool:
-    if filename in items(path):
-        raise exceptions.Conflict(f"{path} file {filename} already exists")
+    dir = items(path)
+    for filename in filenames:
+        if filename not in dir:
+            raise exceptions.NotFound(f"{path} file {filename} not found")
+
+def assert_unused(path, filenames: str or [str]) -> bool:
+    if isinstance(filenames, str):
+        filenames = [filenames]
+
+    dir = items(path)
+    for filename in filenames:
+        if filename in dir:
+            raise exceptions.Conflict(f"{path} file {filename} already exists")
 
 def put(path: str, local_path: str, name=None) -> str:
     '''Upload file stream to S3.'''
@@ -85,15 +100,17 @@ def get_link(path, filename: str) -> 'binary buffer':
     )
     return g.client.generate_presigned_url('get_object', Params=params, ExpiresIn=60)
 
-def delete(path, filename: str):
-    assert_exists(path, _check_secure_filename(filename))
+def delete(path, filenames=None):
+    if filenames is None:
+        filenames = ['']
+    elif isinstance(filenames, str):
+        filenames = [filenames]
+
+    path = _with_trailing_slash(path)
+    assert_exists(path, _check_secure_filename(filenames))
     response = g.bucket.delete_objects(
         Delete=dict(
-            Objects=[
-                dict(
-                    Key=_with_trailing_slash(path) + filename,
-                ),
-            ],
+            Objects=[dict(Key=path + filename) for filename in filenames],
         ),
     )
     print(response)

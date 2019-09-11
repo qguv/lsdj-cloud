@@ -5,25 +5,28 @@
 <p>Here, you can upload a new SRAM file or view past SRAM uploads.</p>
 
 <ol>
-  {%- for name in srams.keys() %}
+  {%- for name, sram in srams %}
   <li>
-    <a href="{{ url_for('sram_download', filename=name) }}">
+    <a href="{{ url_for('sram_download', name=name) }}">
       {{ name }}
     </a>
+    ({{ sram.size | as_bytes }})
   </li>
   {%- endfor %}
 </ol>
 
-In use: {{ mb }}&nbsp;MB
+{%- if total_size %}
+In use: {{ total_size | as_bytes }}
+{%- endif %}
 
 <form method="POST" enctype="multipart/form-data">
 
   <label action="{{ url_for('sram_upload') }}" for="sram">Choose SRAM file</label>
   {#- TODO: put something in here for the JS users #}
-  <input hidden aria-hidden="false" id="sram" name="sram" type="file">
-  <input disabled>
+  <input hidden aria-hidden="false" id="sram" name="sram" type="file" required>
+  <input value="...file chosen." disabled>
 
-  <button>Submit</button>
+  <button>Upload</button>
 
 </form>
 {% endblock content %}

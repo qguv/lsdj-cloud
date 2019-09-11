@@ -97,13 +97,23 @@ button, label {
   background-color: white;
 }
 
-input {
+input, input:invalid {
   border-color: rgb(255, 255, 255, 0.2);
   background-color: rgb(0, 0, 0, 0.2);
   transition-property: border-color, background-color;
   transition-duration: 300ms;
 } input:focus, input:active {
   border-color: white;
+} input:valid {
+  border-color: #c4e17f80;
+} input:valid:focus, input:valid:active, input:valid[hidden] + input[disabled] {
+  border-color: #c4e17f;
+} input:invalid[hidden] + input[disabled] {
+  color: transparent;
+}
+
+form:invalid button:last-child {
+  display: none;
 }
 
 /* inputs and labels should look good together */

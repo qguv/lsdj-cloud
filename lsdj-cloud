@@ -4,7 +4,6 @@ import boto3
 from flask import g
 
 from src.app import app
-from src import store
 import config
 
 from sys import argv

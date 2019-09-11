@@ -3,16 +3,29 @@
 from . import auth
 from . import store
 from . import liblsdj
-from . import misc
+from . import models
+from .flask import Flask
 
 from flask import request, redirect, url_for, render_template, flash
-from flask import Flask
 
 from pathlib import Path
 from werkzeug import exceptions
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__, static_folder='../static', template_folder='../templates')
+
+# TODO this should somehow be elsewhere
+@app.template_filter('as_bytes')
+def as_bytes(x: int) -> str:
+    s = str(x)
+    digits = len(s)
+
+    if digits < 4:
+        return f'{x} B'
+
+    split = (digits - 1) % 3 + 1
+    prefix = 'kMGTEPEZY'[(digits - 4) // 3]
+    return f'{s[:split]}.{s[split:3]}'.rstrip('.') + f' {prefix}B'
 
 @app.route('/ok')
 def ok():
@@ -32,12 +45,6 @@ def logout():
     auth.deauth()
     return redirect(url_for('root'))
 
-@app.route('/srams')
-@auth.required
-def srams():
-    mb = f"{store.usage('sram') / 1000:.1f}"
-    return render_template('srams.html', srams=store.items('sram'), mb=mb)
-
 @app.route('/srams', methods=('POST',))
 @auth.required
 def sram_upload():
@@ -50,7 +57,7 @@ def sram_upload():
 
             # split into track files
             with liblsdj.split(f.name) as d:
-                trackpaths = {secure_filename(p.stem): str(p) for p in Path(d).iterdir()}
+                trackpaths = {secure_filename(p.name): str(p) for p in Path(d).iterdir()}
 
                 # ensure all paths are free
                 for name in trackpaths.keys():
@@ -63,69 +70,84 @@ def sram_upload():
 
             # success! store sram in s3
             sram_name = store.put('sram', f.name)
-            flash(f"{len(trackpaths)} tracks saved from SRAM {sram_name}.")
+            flash(f"{len(trackpaths)} tracks saved from SRAM file {sram_name}.")
 
         # TODO automatically make a playlist for each uploaded SRAM
         # TODO you should optionally be able to fix an old version of a track on a playlist
         return redirect(url_for('srams'))
 
+@app.route('/srams')
+@auth.required
+def srams():
+    return render_template('srams.html', srams=sorted(models.srams().items()), total_size=store.usage('sram'))
+
 @app.route('/tracks')
 @auth.required
 def tracks():
-    tracks = sorted(store.items('track').items())
-    mb = f"{store.usage('track') / 1000:.1f}"
-    return render_template('tracks.html', tracks=tracks, mb=mb)
+    tracks = sorted(models.tracks().items())
+    total_size = store.usage('track')
+    return render_template('tracks.html', tracks=tracks, total_size=total_size)
 
 @app.route('/tracks/<name>')
 @auth.required
 def track(name):
-    store.assert_exists('track', name)
-    obj = store.items('track')[name]
-    mb = f"{obj.size / 1000:.1f}"
-    return render_template('track.html', name=name, mb=mb)
+    # TODO wasteful
+    track = models.tracks()[name]
+    return render_template('track.html', name=name, track=track)
 
 @app.route('/srams/<name>/download')
 @auth.required
 def sram_download(name):
     return redirect(store.get_link('sram', name))
 
-@app.route('/tracks/<name>/download')
+@app.route('/tracks/<name>/<int:version>/download')
 @auth.required
-def track_download(name):
+def track_download(name, version):
+    name = models.tracks()[name]['versions'][version]['full_name']
     return redirect(store.get_link('track', name))
 
-# DEBUG
-@app.route('/srams/<name>/delete', methods=('GET', 'POST'))
+@app.route_delete('/srams/<name>', name="this SRAM file")
 @auth.required
-@misc.confirm_delete("SRAM")
 def sram_delete(name):
     store.delete('sram', name)
     return redirect(url_for('srams'))
 
-# DEBUG
-@app.route('/tracks/<name>/delete', methods=('GET', 'POST'))
+@app.route_delete('/tracks/<name>', name="all versions of this track")
 @auth.required
-@misc.confirm_delete("track")
 def track_delete(name):
-    store.delete('track', name)
-    return redirect(url_for('tracks'))
+    tracks = models.tracks()
+
+    res = redirect(url_for('tracks') if len(tracks) > 1 else url_for('srams'))
+
+    track = tracks[name]
+    store.delete('track', [version['full_name'] for version in track['versions'].values()])
+
+    return res
+
+@app.route_delete('/tracks/<name>/<int:version>', name="this version of the track")
+@auth.required
+def track_version_delete(name, version):
+    tracks = models.tracks()
+    track = tracks[name]
+    version = track['versions'][version]
+
+    res = redirect(url_for('track', name=name) if len(track['versions']) > 1 else url_for('tracks') if len(tracks) > 1 else url_for('srams'))
+
+    store.delete('track', version['full_name'])
+    return res
 
 # DEBUG
-@app.route('/srams/delete', methods=('GET', 'POST'))
+@app.route_delete('/srams', name="all SRAM files")
 @auth.required
-@misc.confirm_delete("all SRAMs")
 def srams_delete():
-    for name in store.items('sram'):
-        store.delete('sram', name)
+    store.delete('sram', list(store.items('sram').keys()))
     return redirect(url_for('srams'))
 
 # DEBUG
-@app.route('/tracks/delete', methods=('GET', 'POST'))
+@app.route_delete('/tracks', name="all versions of all tracks")
 @auth.required
-@misc.confirm_delete("all tracks")
 def tracks_delete():
-    for name in store.items('track'):
-        store.delete('track', name)
+    store.delete('track', list(store.items('track').keys()))
     return redirect(url_for('tracks'))
 
 # DEBUG

@@ -4,5 +4,20 @@
 
 <h2>{{ name }}</h2>
 
-Size: {{ mb }}&nbsp;MB
+<ul class="bare">
+  <li>
+    <ul class="bare horizontal">
+      <li>Size</li>
+      <li>{{ track.size | as_bytes }}</li>
+    </ul>
+  </li>
+  <li>
+    <ul class="bare horizontal">
+      <li>Versions</li>
+      {%- for version in track.versions %}
+      <li><a href="{{ url_for('track_download', name=name, version=version) }}">{{ version }}</a></li>
+      {%- endfor %}
+    </ul>
+  </li>
+</ul>
 {% endblock content %}

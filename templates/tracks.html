@@ -8,16 +8,20 @@
 </p>
 
 <ol>
-  {%- for name, obj in tracks %}
+  {%- for name, track in tracks %}
   <li>
-    <a href="{{ url_for('track', name=name) }}">
-      {{ name }}
-    </a>
+    <a href="{{ url_for('track', name=name) }}">{{ name }}</a>
     {#- TODO display: (inline-)grid; #}
-    ({{ '{:.1f}'.format(obj.size / 1000) }}&nbsp;MB)
+    {%- if track.versions | length == 1 %}
+    (version {{ track.versions | first }}, {{ track.size | as_bytes }})
+    {%- else %}
+    ({{ track.versions | length }} versions, {{ track.size | as_bytes }} total)
+    {%- endif %}
   </li>
   {%- endfor %}
 </ol>
 
-In use: {{ mb }}&nbsp;MB
-{% endblock content %}
+{%- if total_size %}
+In use: {{ total_size | as_bytes }}
+{%- endif %}
+{% endblock %}
