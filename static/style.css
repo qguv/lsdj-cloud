@@ -53,7 +53,7 @@ body {
 }
 
 .content {
-  padding: calc(var(--content-padding) - var(--flash-vertical-padding)) var(--content-padding) var(--content-padding);
+  padding: calc(var(--content-padding) - var(--flash-vertical-padding)) var(--content-padding) 0;
 }
 
 header {
@@ -68,9 +68,9 @@ h2 {
   margin: 1em 0 0;
 }
 
-ul {
+ul, ol {
   margin: 0;
-} ul li {
+} ul li, ol li {
   margin: 0.5em 0;
 }
 
