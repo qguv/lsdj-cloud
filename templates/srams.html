@@ -7,9 +7,7 @@
 <ol>
   {%- for name, sram in srams %}
   <li>
-    <a href="{{ url_for('sram_download', name=name) }}">
-      {{ name }}
-    </a>
+    <a href="{{ url_for('sram_download', name=name) }}">{{ name }}</a>
     ({{ sram.size | as_bytes }})
   </li>
   {%- endfor %}
