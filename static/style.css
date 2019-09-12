@@ -1,21 +1,16 @@
-@media only screen and (min-width: 550px) {
-  p, li {
-    text-align: justify;
-  }
-}
-
 :root {
   --flash-font-size: 16px;
   --flash-vertical-padding: 8px;
   --content-margin: 16px;
   --content-padding: 32px;
+  --max-content-width: 650px;
   --diagonal-colors: linear-gradient(
     45deg,
-    #c4e17fb0      20%,
-    #f7fdcab0 20%  40%,
-    #fad071b0 40%  60%,
-    #f0766bb0 60%  80%,
-    #db9dbeb0 80%
+    #c4e17f      20%,
+    #f7fdca 20%  40%,
+    #fad071 40%  60%,
+    #f0766b 60%  80%,
+    #db9dbe 80%
   );
   --horizontal-colors: linear-gradient(
     to right,
@@ -27,6 +22,12 @@
   );
 }
 
+@media only screen and (min-width: 550px) {
+  p, li {
+    text-align: justify;
+  }
+}
+
 * {
   box-sizing: border-box;
   font-family: "Droid Sans Mono", monospace;
@@ -34,9 +35,44 @@
 }
 
 body {
-  background: var(--diagonal-colors), linear-gradient(black, black);
+  background: linear-gradient(
+    to right,
+    hsla(0, 0%, 0%, 0.69) calc(50% - 1000px),
+    hsla(0, 0%, 0%, 0.68225) calc(50% - 924px),
+    hsla(0, 0%, 0%, 0.66035) calc(50% - 854px),
+    hsla(0, 0%, 0%, 0.62632) calc(50% - 788px),
+    hsla(0, 0%, 0%, 0.58219) calc(50% - 726px),
+    hsla(0, 0%, 0%, 0.52997) calc(50% - 667px),
+    hsla(0, 0%, 0%, 0.47168) calc(50% - 610px),
+    hsla(0, 0%, 0%, 0.40935) calc(50% - 555px),
+    hsla(0, 0%, 0%, 0.345) calc(50% - 500px),
+    hsla(0, 0%, 0%, 0.28065) calc(50% - 445px),
+    hsla(0, 0%, 0%, 0.21832) calc(50% - 390px),
+    hsla(0, 0%, 0%, 0.16003) calc(50% - 333px),
+    hsla(0, 0%, 0%, 0.10781) calc(50% - 274px),
+    hsla(0, 0%, 0%, 0.06368) calc(50% - 212px),
+    hsla(0, 0%, 0%, 0.02965) calc(50% - 146px),
+    hsla(0, 0%, 0%, 0.00775) calc(50% - 76px),
+    transparent 50%,
+    hsla(0, 0%, 0%, 0.00775) calc(50% + 76px),
+    hsla(0, 0%, 0%, 0.02965) calc(50% + 146px),
+    hsla(0, 0%, 0%, 0.06368) calc(50% + 212px),
+    hsla(0, 0%, 0%, 0.10781) calc(50% + 274px),
+    hsla(0, 0%, 0%, 0.16003) calc(50% + 333px),
+    hsla(0, 0%, 0%, 0.21832) calc(50% + 390px),
+    hsla(0, 0%, 0%, 0.28065) calc(50% + 445px),
+    hsla(0, 0%, 0%, 0.345) calc(50% + 500px),
+    hsla(0, 0%, 0%, 0.40935) calc(50% + 555px),
+    hsla(0, 0%, 0%, 0.47168) calc(50% + 610px),
+    hsla(0, 0%, 0%, 0.52997) calc(50% + 667px),
+    hsla(0, 0%, 0%, 0.58219) calc(50% + 726px),
+    hsla(0, 0%, 0%, 0.62632) calc(50% + 788px),
+    hsla(0, 0%, 0%, 0.66035) calc(50% + 854px),
+    hsla(0, 0%, 0%, 0.68225) calc(50% + 924px),
+    hsla(0, 0%, 0%, 0.69) calc(50% + 1000px)
+  ), var(--diagonal-colors);
   margin: 0;
-  padding: 0 var(--content-margin);
+  padding: var(--content-margin) var(--content-margin) 0;
 }
 
 .container {
@@ -46,7 +82,7 @@ body {
     rgba(64, 64, 64, 0.7)
   );
   max-width: 650px;
-  margin: var(--content-margin) auto 0;
+  margin: 0 auto;
   min-height: calc(100vh - var(--content-margin))
 } .container, ul.flash li {
   border-radius: 10px 10px 0 0;
@@ -166,6 +202,12 @@ ul.flash {
   text-align: center;
   padding: var(--flash-vertical-padding) var(--content-padding);
   background-color: rgba(63, 127, 255, 0.8);
+}
+
+a:hover {
+  background: var(--horizontal-colors) text;
+  color: transparent;
+  border-bottom: 1px solid white;
 }
 
 footer {

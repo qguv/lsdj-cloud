@@ -15,7 +15,7 @@
     <ul class="bare horizontal">
       <li>Versions</li>
       {%- for version in track.versions %}
-      <li><a href="{{ url_for('track_download', name=name, version=version) }}">{{ version }}</a></li>
+      <li><a href="{{ url_for('track_download', name=name, version=version) }}">#{{ version }}</a></li>
       {%- endfor %}
     </ul>
   </li>
