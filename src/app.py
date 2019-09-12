@@ -92,19 +92,19 @@ def sram_upload():
         return redirect(url_for('srams'))
 
 @app.route('/srams')
-@auth.required
+#DEBUG @auth.required
 def srams():
     return render_template('srams.html', srams=sorted(models.srams().items()), total_size=store.usage('sram'))
 
 @app.route('/tracks')
-@auth.required
+#DEBUG @auth.required
 def tracks():
     tracks = sorted(models.tracks().items())
     total_size = store.usage('track')
     return render_template('tracks.html', tracks=tracks, total_size=total_size)
 
 @app.route('/tracks/<name>')
-@auth.required
+#DEBUG @auth.required
 def track(name):
     # TODO wasteful
     track = models.tracks()[name]
