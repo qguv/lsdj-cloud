@@ -7,24 +7,31 @@ def deauth():
     session.clear()
     flash("Logged out.")
 
-def login_form(success_redirect_route: str):
+def login_form(*, success_redirect: str):
     def decorator(wrapped):
         @wraps(wrapped)
         def wrapping(*args, **kwargs):
+
             if request.method == 'POST':
 
-                # FIXME actually check credentials
-                if request.form.get('username') and request.form.get('password') == g.valid_token:
+                # FIXME actually generate token
+                session['t'] = request.form.get('password')
+
+                if g.is_authenticated() and request.form.get('username'):
                     session['u'] = request.form['username']
-                    session['t'] = g.valid_token # FIXME
                     flash(f"Welcome, {escape(session['u'])}.")
+
                     try:
                         return_to = parse_qs(urlparse(request.referrer).query)['r'][0]
-                        return redirect(f"/{return_to}")
+                        return redirect(f"/{return_to}" if return_to else url_for(success_redirect_route))
                     except KeyError:
                         return redirect(url_for(success_redirect_route))
-                else:
-                    flash('Invalid credentials!')
+
+                flash('Invalid credentials!')
+                # TODO query string will be lost on invalid credentials
+
+            if request.args.get('r'):
+                flash("You need to log in first.")
 
             return wrapped(*args, **kwargs)
         return wrapping
@@ -33,8 +40,7 @@ def login_form(success_redirect_route: str):
 def required(wrapped):
     @wraps(wrapped)
     def wrapping(*args, **kwargs):
-        if 't' not in session:
-            flash("You need to log in first.")
+        if not g.is_authenticated():
             return redirect(url_for('login', r=request.full_path.lstrip('/').rstrip('?')))
         return wrapped(*args, **kwargs)
     return wrapping

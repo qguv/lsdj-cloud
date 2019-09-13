@@ -30,8 +30,8 @@
 
 * {
   box-sizing: border-box;
-  font-family: "Droid Sans Mono", monospace;
   color: white;
+  font-family: "Droid Sans", "Noto Sans", sans-serif;
 }
 
 body {
@@ -100,6 +100,10 @@ h1 {
   margin: 0;
 }
 
+header h1, header h1 * {
+  font-family: "Droid Sans Mono", "Linux Libertine Mono", monospace;
+}
+
 h2 {
   margin: 1em 0 0;
 }
@@ -163,24 +167,24 @@ form {
   margin: 1em 0;
 } form input {
   width: 100%;
-} form input {
   border-left-width: 0;
   justify-self: left;
   border-top-left-radius: 0px;
   border-bottom-left-radius: 0px;
-} form label {
+} form label, form a {
   justify-self: right;
+  min-width: 13ch;
+  text-align: center;
   border-top-right-radius: 0px;
   border-bottom-right-radius: 0px;
 } form button {
   grid-column: span 2;
 }
 
-/* horizontal menu */
 ul.horizontal li {
   float: left;
 } ul.horizontal li {
-  padding: 0 1em;
+  padding: 0 0.5em;
   border-left: 1px solid white;
 } ul.horizontal li:first-child {
   padding-left: 0;
@@ -204,7 +208,7 @@ ul.flash {
   background-color: rgba(63, 127, 255, 0.8);
 }
 
-a:hover {
+a:not(.bare):hover {
   background: var(--horizontal-colors) text;
   color: transparent;
   border-bottom: 1px solid white;

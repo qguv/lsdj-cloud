@@ -17,12 +17,16 @@
 <p>In use: {{ total_size | as_bytes }}</p>
 {%- endif %}
 
-<form method="POST" enctype="multipart/form-data">
+<form action="{{ url_for('sram_upload') }}" method="POST" enctype="multipart/form-data">
 
-  <label action="{{ url_for('sram_upload') }}" for="sram">Choose SRAM file</label>
-  {#- TODO: put something in here for the JS users #}
-  <input hidden aria-hidden="false" id="sram" name="sram" type="file" required>
-  <input value="...file chosen." disabled>
+  {%- if g.is_authenticated() %}
+  <label for="sram">Upload SRAM file</label>
+  {%- else %}
+  <a class="bare" href="{{ url_for('login', r='/'+request.path) }}"><label>Upload SRAM file</label></a>
+  {%- endif %}
+
+  <input hidden aria-hidden="false" id="sram" name="sram" type="file" onchange="form.submit()" required>
+  <input value="...OK" disabled>
 
   <button>Upload</button>
 

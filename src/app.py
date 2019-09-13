@@ -51,7 +51,7 @@ def root():
     return render_template('root.html')
 
 @app.route('/login', methods=('GET', 'POST'))
-@auth.login_form('root')
+@auth.login_form(success_redirect='root')
 def login():
     return render_template('login.html')
 
