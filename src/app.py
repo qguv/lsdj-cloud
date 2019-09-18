@@ -13,6 +13,11 @@ from werkzeug import exceptions
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__, static_folder='../static', template_folder='../templates')
+app.config.update(
+    SESSION_COOKIE_SECURE=True,
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE='Strict',
+)
 
 # TODO this should somehow be elsewhere
 @app.template_filter('as_bytes')
@@ -26,6 +31,16 @@ def as_bytes(x: int) -> str:
     split = (digits - 1) % 3 + 1
     prefix = 'kMGTEPEZY'[(digits - 4) // 3]
     return f'{s[:split]}.{s[split:3]}'.rstrip('.') + f' {prefix}B'
+
+@app.after_request
+def security_headers(response):
+    response.headers['Content-Security-Policy'] = '''default-src 'none'; style-src 'self';'''
+    response.headers['X-Frame-Options'] = 'deny'
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+    response.headers['Referrer-Policy'] = 'no-referrer'
+    return response
 
 @app.route('/ok')
 def ok():
