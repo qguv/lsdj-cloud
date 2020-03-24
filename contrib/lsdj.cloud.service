@@ -1,0 +1,14 @@
+[Unit]
+Description=LSDj Cloud server
+Requires=nginx.service
+After=network.target
+
+[Service]
+User=lsdj-cloud
+WorkingDirectory=/var/lib/lsdj.cloud
+ExecStart=/usr/local/lib/lsdj.cloud/.venv/bin/python /usr/local/lib/lsdj.cloud/lsdj-cloud
+Restart=always
+RestartDelay=10s
+
+[Install]
+WantedBy=multi-user.target
