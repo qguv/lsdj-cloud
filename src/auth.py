@@ -23,9 +23,9 @@ def login_form(*, success_redirect: str):
 
                     try:
                         return_to = parse_qs(urlparse(request.referrer).query)['r'][0]
-                        return redirect(f"/{return_to}" if return_to else url_for(success_redirect_route))
+                        return redirect(f"/{return_to}" if return_to else url_for(success_redirect))
                     except KeyError:
-                        return redirect(url_for(success_redirect_route))
+                        return redirect(url_for(success_redirect))
 
                 flash('Invalid credentials!')
                 # TODO query string will be lost on invalid credentials
