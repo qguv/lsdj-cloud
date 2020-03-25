@@ -75,14 +75,18 @@ def sram_upload():
                 trackpaths = {secure_filename(p.name): str(p) for p in Path(d).iterdir()}
 
                 # ensure all paths are free
-                to_upload = store.new_files('track', trackpaths.keys())
+                to_upload = list(store.new_files('track', trackpaths.keys()))
                 for name in to_upload:
                     path = trackpaths[name]
                     store.put('track', path, name=name)
 
             # success! store sram in s3
             sram_name = store.put('sram', f.name)
-            flash(f"{len(trackpaths)} tracks saved from SRAM file {sram_name}.")
+
+            msg = f"{len(to_upload)} new tracks saved from SRAM file {sram_name}"
+            if len(to_upload) < len(trackpaths):
+                msg += f" ({len(trackpaths) - len(to_upload)} tracks existed already)"
+            flash(msg)
 
         # TODO automatically make a playlist for each uploaded SRAM
         # TODO you should optionally be able to fix an old version of a track on a playlist
