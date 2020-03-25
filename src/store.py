@@ -73,14 +73,11 @@ def assert_exists(path, filenames: str or [str]) -> bool:
         if filename not in dir:
             raise exceptions.NotFound(f"{path} file {filename} not found")
 
-def assert_unused(path, filenames: str or [str]) -> bool:
-    if isinstance(filenames, str):
-        filenames = [filenames]
-
+def new_files(path, filenames: [str]) -> [str]:
     dir = items(path)
     for filename in filenames:
-        if filename in dir:
-            raise exceptions.Conflict(f"{path} file {filename} already exists")
+        if filename not in dir:
+            yield filename
 
 def put(path: str, local_path: str, name=None) -> str:
     '''Upload file stream to S3.'''
@@ -88,7 +85,8 @@ def put(path: str, local_path: str, name=None) -> str:
         name = _new_filename()
     else:
         # make sure it doesn't already exist
-        assert_unused(path, name)
+        if not any(new_files(path, [name])):
+            raise exceptions.Conflict(f"{path} file {filename} already exists")
 
     g.bucket.upload_file(local_path, _with_trailing_slash(path) + _check_secure_filename(name))
     return name

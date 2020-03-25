@@ -75,13 +75,10 @@ def sram_upload():
                 trackpaths = {secure_filename(p.name): str(p) for p in Path(d).iterdir()}
 
                 # ensure all paths are free
-                for name in trackpaths.keys():
-                    store.assert_unused('track', name)
-
-                # save them all in S3
-                for name, path in trackpaths.items():
+                to_upload = store.new_files('track', trackpaths.keys())
+                for name in to_upload:
+                    path = trackpaths[name]
                     store.put('track', path, name=name)
-
 
             # success! store sram in s3
             sram_name = store.put('sram', f.name)
