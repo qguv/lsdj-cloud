@@ -30,7 +30,7 @@ def _with_trailing_slash(path):
 def stash(mf: 'binary-opened file') -> NamedTemporaryFile:
     '''Temporarily stash file stream on disk.'''
     tf = NamedTemporaryFile()
-    mf.save(tf)
+    mf.save(tf.name)
     return tf
 
 def memo(f):
