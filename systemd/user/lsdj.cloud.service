@@ -1,0 +1,6 @@
+[Unit]
+Description=Chiptune track sharing network
+
+[Service]
+WorkingDirectory=%h/dev/lsdj.cloud
+ExecStart=/usr/bin/pipenv run ./lsdj-cloud
