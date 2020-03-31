@@ -1,5 +1,7 @@
 [Unit]
 Description=Chiptune track sharing network
+Requires=redis.service
+Requires=minio.service
 
 [Service]
 WorkingDirectory=%h/dev/lsdj-cloud
