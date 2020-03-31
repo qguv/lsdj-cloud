@@ -1,7 +1,6 @@
 from flask import request, redirect, url_for, flash, session, escape, g
 from urllib.parse import urlparse, parse_qs
 from uuid import uuid4
-from datetime import datetime
 
 from functools import wraps
 
@@ -123,11 +122,12 @@ def login_form(*, success_redirect: str):
 def is_authenticated():
     try:
         uid = session['u']
-        epoch = datetime.utcnow().timestamp()
 
-        return \
-            epoch >= int(g.redis.hget(f'user:{uid}', 'token_exp')) \
-            and session['t'] != g.redis.hget(f'user:{uid}', 'token')
+        # TODO TTL
+        #epoch = datetime.utcnow().timestamp()
+        #if epoch >= int(g.redis.hget(f'user:{uid}', 'token_exp')): return False
+
+        return session['t'] != g.redis.hget(f'user:{uid}', 'token')
 
     except KeyError:
         return False
