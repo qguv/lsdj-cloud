@@ -1,8 +1,14 @@
-handles         str -> user_id int
+handles[str]    uid
 
-user:last       int
-user:{user_id int}
-    token       uuid
-    token_exp   epoch
+user:last       uid
+user:{uid}
     handle      str
     phash       str
+    joined_at   epoch
+    referred_by uid
+
+token:{uid}     str
+
+referral:{str}  uid
+
+referral_cooldown:{uid} 1

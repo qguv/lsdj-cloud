@@ -24,11 +24,14 @@ app.config.update(
 
 bcrypt = Bcrypt(app)
 
-redis = Redis(**env.redis_config())
+redis = Redis(
+    decode_responses=True,
+    **env.redis_config(),
+)
 
 store = Store(**env.store_config())
 
-auth = Auth(redis=redis, bcrypt=bcrypt)
+auth = Auth(redis=redis, bcrypt=bcrypt, **env.auth_config())
 
 models = Models(store)
 
@@ -69,9 +72,29 @@ def login():
     return render_template('login.html', auth=auth)
 
 @app.route('/signup', methods=('GET', 'POST'))
+@app.route('/signup/<rid>', methods=('GET',))
 @auth.signup_form(success_redirect='root')
-def signup():
-    return render_template('signup.html', auth=auth)
+def signup(rid=None):
+    return render_template('signup.html', auth=auth, rid=rid)
+
+@app.route('/referrals', methods=('GET', 'POST'))
+@auth.required()
+def referrals():
+    uid = session['u']
+    context = dict()
+
+    if request.method == 'POST':
+        try:
+            context['referral'] = rid = self.auth.generate_referral(uid)
+            context['referral_url'] = url_for('signup', referral=rid)
+        except AuthError:
+            flash("You can't generate a referral right now.")
+
+    referral_cooldown = self.redis.ttl(f'referral_cooldown:{uid}')
+    if referral_cooldown >= 0:
+        context['referral_cooldown'] = referral_cooldown + 1
+
+    return render_template('referrals.html', auth=auth, **context)
 
 @app.route('/logout')
 def logout():
@@ -79,7 +102,7 @@ def logout():
     return redirect(url_for('root'))
 
 @app.route('/srams', methods=('POST',))
-@auth.required
+@auth.required()
 def sram_upload():
     if request.method == 'POST':
         if 'sram' not in request.files:
@@ -130,24 +153,24 @@ def track(name):
     return render_template('track.html', auth=auth, name=name, track=track)
 
 @app.route('/srams/<name>/download')
-@auth.required
+@auth.required()
 def sram_download(name):
     return redirect(store.get_link('sram', name))
 
 @app.route('/tracks/<name>/<int:version>/download')
-@auth.required
+@auth.required()
 def track_download(name, version):
     name = models.tracks()[name]['versions'][version]['full_name']
     return redirect(store.get_link('track', name))
 
 @app.route_delete('/srams/<name>', name="this SRAM file")
-@auth.required
+@auth.required()
 def sram_delete(name):
     store.delete('sram', name)
     return redirect(url_for('srams'))
 
 @app.route_delete('/tracks/<name>', name="all versions of this track")
-@auth.required
+@auth.required()
 def track_delete(name):
     tracks = models.tracks()
 
@@ -159,7 +182,7 @@ def track_delete(name):
     return res
 
 @app.route_delete('/tracks/<name>/<int:version>', name="this version of the track")
-@auth.required
+@auth.required()
 def track_version_delete(name, version):
     tracks = models.tracks()
     track = tracks[name]
@@ -172,14 +195,14 @@ def track_version_delete(name, version):
 
 # DEBUG
 @app.route_delete('/srams', name="all SRAM files")
-@auth.required
+@auth.required()
 def srams_delete():
     store.delete('sram', list(store.items('sram').keys()))
     return redirect(url_for('srams'))
 
 # DEBUG
 @app.route_delete('/tracks', name="all versions of all tracks")
-@auth.required
+@auth.required()
 def tracks_delete():
     store.delete('track', list(store.items('track').keys()))
     return redirect(url_for('tracks'))

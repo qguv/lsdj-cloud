@@ -38,5 +38,10 @@ def store_config():
         S3_SECRET='s3_secret',
     )
 
+def auth_config():
+    return env2dict(
+        TOKEN_TTL=('token_ttl', int, 'TOKEN_TTL must be numeric!'),
+    )
+
 def inject_flask_secret(app):
     app.secret_key = environ['SECRET_KEY']
