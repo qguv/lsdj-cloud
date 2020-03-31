@@ -1,0 +1,8 @@
+handles         str -> user_id int
+
+user:last       int
+user:{user_id int}
+    token       uuid
+    token_exp   epoch
+    handle      str
+    phash       str

@@ -1,8 +1,8 @@
 {% extends 'base.html' %}
-{% block title %}Log in{% endblock title %}
+{% block title %}Sign up{% endblock title %}
 {% block content %}
 
-<form action="{{ url_for('login') }}" method="POST" enctype="multipart/form-data">
+<form action="{{ url_for('signup') }}" method="POST" enctype="multipart/form-data">
 
   <label for="handle">Username</label>
   <input id="handle" name="h" required>
@@ -10,8 +10,8 @@
   <label for="password">Password</label>
   <input id="password" name="p" type="password" required>
 
-  <button>Log in</button>
+  <button>Sign up</button>
 
 </form>
-<p>Don't have an account yet? <a href="{{ url_for('signup') }}">Sign up here.</a></p>
+<p>Already have an account? <a href="{{ url_for('login') }}">Log in here.</a></p>
 {% endblock content %}

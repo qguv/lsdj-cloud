@@ -2,6 +2,8 @@
 
 import boto3
 from flask import g, session
+from redis import Redis
+from flask_bcrypt import Bcrypt
 
 from src.app import app
 import config
@@ -11,9 +13,6 @@ from sys import argv
 # set up flask app
 app.secret_key = config.secret_key
 
-def is_authenticated():
-    return session.get('t') == config.valid_token
-
 # TODO this should somehow be elsewhere
 @app.before_request
 def bucket_factory():
@@ -21,7 +20,12 @@ def bucket_factory():
     g.client = boto3.client('s3', **config.s3)
     g.bucket = g.s3.Bucket(config.bucket_name)
 
-    # FIXME actually check credentials
-    g.is_authenticated = is_authenticated
+@app.before_request
+def redis_factory():
+    g.redis = Redis(config.redis)
+
+@app.before_request
+def bcrypt_factory():
+    g.bcrypt = Bcrypt(app)
 
 app.run(debug='--debug' in argv[1:])

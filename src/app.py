@@ -6,7 +6,7 @@ from . import liblsdj
 from . import models
 from .flask import Flask
 
-from flask import request, redirect, url_for, render_template, flash
+from flask import request, redirect, url_for, render_template, flash, g
 
 from pathlib import Path
 from werkzeug import exceptions
@@ -32,6 +32,11 @@ def as_bytes(x: int) -> str:
     prefix = 'kMGTEPEZY'[(digits - 4) // 3]
     return f'{s[:split]}.{s[split:3]}'.rstrip('.') + f' {prefix}B'
 
+# TODO this should somehow be elsewhere
+@app.before_request
+def add_auth_function():
+    g.is_authenticated = auth.is_authenticated
+
 @app.after_request
 def security_headers(response):
     response.headers['Content-Security-Policy'] = '''default-src 'none'; style-src 'self';'''
@@ -54,6 +59,11 @@ def root():
 @auth.login_form(success_redirect='root')
 def login():
     return render_template('login.html')
+
+@app.route('/signup', methods=('GET', 'POST'))
+@auth.signup_form(success_redirect='root')
+def signup():
+    return render_template('signup.html')
 
 @app.route('/logout')
 def logout():
