@@ -9,6 +9,8 @@ flake8 = "*"
 [packages]
 boto3 = "*"
 Flask = "*"
+redis = "*"
+flask-bcrypt = "*"
 
 [requires]
 python_version = "3.8"
