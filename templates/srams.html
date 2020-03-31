@@ -19,7 +19,7 @@
 
 <form action="{{ url_for('sram_upload') }}" method="POST" enctype="multipart/form-data">
 
-  {%- if g.is_authenticated() %}
+  {%- if auth.is_authenticated() %}
   <label for="sram">Upload SRAM file</label>
   {%- else %}
   <a class="bare" href="{{ url_for('login', r='/'+request.path) }}"><label>Upload SRAM file</label></a>

@@ -22,7 +22,7 @@
           <li><a href="{{ url_for('srams') }}">SRAMs</a></li>
           <li><a href="{{ url_for('tracks') }}">Tracks</a></li>
           <li><a href="#">Playlists</a></li>
-	  {%- if g.is_authenticated() %}
+	  {%- if auth.is_authenticated() %}
           <li>
             {{ session['u'] }}
             (<a href="{{ url_for('logout') }}">log out</a>)

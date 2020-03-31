@@ -1,16 +1,19 @@
 #!/usr/bin/env python3
 
-from . import auth
-from . import store
 from . import liblsdj
-from . import models
+from . import env
+from .auth import Auth
+from .store import Store
 from .flask import Flask
+from .models import Models
 
 from flask import request, redirect, url_for, render_template, flash, g
-
-from pathlib import Path
+from flask_bcrypt import Bcrypt
+from redis import Redis
 from werkzeug import exceptions
 from werkzeug.utils import secure_filename
+
+from pathlib import Path
 
 app = Flask(__name__, static_folder='../static', template_folder='../templates')
 app.config.update(
@@ -18,6 +21,16 @@ app.config.update(
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE='Strict',
 )
+
+bcrypt = Bcrypt(app)
+
+redis = Redis(**env.redis_config())
+
+store = Store(**env.store_config())
+
+auth = Auth(redis=redis, bcrypt=bcrypt)
+
+models = Models(store)
 
 # TODO this should somehow be elsewhere
 @app.template_filter('as_bytes')
@@ -31,11 +44,6 @@ def as_bytes(x: int) -> str:
     split = (digits - 1) % 3 + 1
     prefix = 'kMGTEPEZY'[(digits - 4) // 3]
     return f'{s[:split]}.{s[split:3]}'.rstrip('.') + f' {prefix}B'
-
-# TODO this should somehow be elsewhere
-@app.before_request
-def add_auth_function():
-    g.is_authenticated = auth.is_authenticated
 
 @app.after_request
 def security_headers(response):
@@ -53,17 +61,17 @@ def ok():
 
 @app.route('/')
 def root():
-    return render_template('root.html')
+    return render_template('root.html', auth=auth)
 
 @app.route('/login', methods=('GET', 'POST'))
 @auth.login_form(success_redirect='root')
 def login():
-    return render_template('login.html')
+    return render_template('login.html', auth=auth)
 
 @app.route('/signup', methods=('GET', 'POST'))
 @auth.signup_form(success_redirect='root')
 def signup():
-    return render_template('signup.html')
+    return render_template('signup.html', auth=auth)
 
 @app.route('/logout')
 def logout():
@@ -105,21 +113,21 @@ def sram_upload():
 @app.route('/srams')
 #DEBUG @auth.required
 def srams():
-    return render_template('srams.html', srams=sorted(models.srams().items()), total_size=store.usage('sram'))
+    return render_template('srams.html', auth=auth, srams=sorted(models.srams().items()), total_size=store.usage('sram'))
 
 @app.route('/tracks')
 #DEBUG @auth.required
 def tracks():
     tracks = sorted(models.tracks().items())
     total_size = store.usage('track')
-    return render_template('tracks.html', tracks=tracks, total_size=total_size)
+    return render_template('tracks.html', auth=auth, tracks=tracks, total_size=total_size)
 
 @app.route('/tracks/<name>')
 #DEBUG @auth.required
 def track(name):
     # TODO wasteful
     track = models.tracks()[name]
-    return render_template('track.html', name=name, track=track)
+    return render_template('track.html', auth=auth, name=name, track=track)
 
 @app.route('/srams/<name>/download')
 @auth.required
@@ -179,4 +187,4 @@ def tracks_delete():
 # DEBUG
 @app.route('/long')
 def long():
-    return render_template('long.html')
+    return render_template('long.html', auth=auth)
