@@ -39,13 +39,13 @@ Now follow one of the sections below depending on how you'd like to run the serv
 ### Running under systemd --user (development)
 
   - `systemctl --user link systemd/user/lsdj.cloud.service`
-  - `systemctl start lsdj.cloud`
-  - `systemctl status lsdj.cloud`
+  - `systemctl start lsdj-cloud`
+  - `systemctl status lsdj-cloud`
 
 ### Running under systemd (production)
 
   - install nginx and configure it to reverse-proxy port 5000. starting/enabling it is not necessary.
   - move this repository to /usr/local/lib/lsdj.cloud
-  - copy contrib/lsdj.cloud.service into `/etc/systemd/system/`
+  - `systemctl link /usr/local/lib/lsdj.cloud/systemd/system/lsdj-cloud.service`
   - run `systemctl daemon-reload` as root
-  - run `systemctl enable --now lsdj.cloud` as root
+  - run `systemctl enable --now lsdj-cloud` as root
