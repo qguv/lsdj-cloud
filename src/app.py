@@ -15,6 +15,7 @@ from werkzeug.utils import secure_filename
 
 from pathlib import Path
 from datetime import timedelta
+from urllib.parse import urlparse, parse_qs
 
 app = Flask(__name__, static_folder='../static', template_folder='../templates')
 app.config.update(
@@ -73,11 +74,23 @@ def login():
     return render_template('login.html', auth=auth)
 
 @app.route('/signup', methods=('GET', 'POST'))
-@app.route('/signup/<rid>', methods=('GET',))
+@app.route('/signup/<uuid:rid>', methods=('GET',))
 @auth.signup_form(success_redirect='root')
 def signup(rid=None):
-    return render_template('signup.html', auth=auth, rid=rid)
+    context = dict()
 
+    try:
+        if rid:
+            ruid = redis[f'referral:{rid}']
+            context["ttl"] = timedelta(seconds=redis.ttl(f'referral:{rid}'))
+            context["rhandle"] = redis.hget(f'user:{ruid}', 'handle')
+    except KeyError:
+        rid = None
+        flash("That referral is not valid (anymore)")
+
+    return render_template('signup.html', auth=auth, rid=rid, **context)
+
+# TODO: URLs are wrong in the POST response but correct in the GET response
 @app.route('/referrals', methods=('GET', 'POST'))
 @auth.required()
 def referrals():
@@ -86,11 +99,11 @@ def referrals():
 
     if request.method == 'POST':
         try:
-            context['new_rid'] = auth.generate_referral(uid)
-        except auth.AuthError:
-            flash("You can't generate a referral right now.")
-        else:
+            new_rid = auth.generate_referral(uid)
             flash("New referral generated!")
+            return redirect(url_for('referrals', n=new_rid))
+        except auth.AuthError:
+            raise exceptions.TooManyRequests("You can't generate a referral right now.")
 
     prefix = 'referral:'
     context['referrals'] = sorted(
@@ -98,6 +111,11 @@ def referrals():
         for k in redis.keys(prefix + '*')
         if redis.get(k) == session['u']
     )
+
+    try:
+        context["new_rid"] = parse_qs(urlparse(request.full_path).query)['n'][0]
+    except KeyError:
+        pass
 
     referral_cooldown = redis.ttl(f'referral_cooldown:{uid}')
     if referral_cooldown >= 0:
@@ -127,7 +145,7 @@ def referrals_delete():
 
     return redirect(url_for('referrals'))
 
-@app.route_delete('/referrals/<name>', auth, name="this referral")
+@app.route_delete('/referrals/<uuid:name>', auth, name="this referral")
 def referral_delete(name):
     ruid = redis.get(f'referral:{name}')
     if session['u'] != ruid:

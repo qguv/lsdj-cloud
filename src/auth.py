@@ -59,7 +59,6 @@ class Auth:
 
                 if request.method == 'POST':
                     try:
-
                         # TODO atomic
                         try:
                             handle = request.form['h']
@@ -107,9 +106,8 @@ class Auth:
 
                     except AuthError as e:
                         s = str(e)
-                        if s:
-                            flash(s)
                         flash(s if s else "Please enter a referral code, handle, and password.")
+                        # TODO auto-fill referral from last time
 
                 # TODO auto-fill handle if known
                 return wrapped(*args, **kwargs)

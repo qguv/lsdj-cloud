@@ -2,6 +2,25 @@
 {% block title %}Sign up{% endblock title %}
 {% block content %}
 
+{% if rhandle -%}
+<p>
+  <span class="strong">
+    Welcome! You've been invited to the site by the user ‹{{ rhandle }}›.
+  </span>
+  If you'd like to join, please enter a username and password for yourself.
+  Your invitation expires in
+  <span class="strong timedelta" data-seconds="{{ ttl.total_seconds() }}">{{ ttl }}</span>,
+  but you can always ask ‹{{ rhandle }}› for another.
+</p>
+
+<p>
+  This service will be free and open source forever. We use invites to keep the
+  community cozy. You can always choose whether to keep your tracks private or
+  publish them so others can learn from them, remix them, or play them in their
+  sets.
+</p>
+{%- endif %}
+
 <form action="{{ url_for('signup') }}" method="POST" enctype="multipart/form-data">
 
   <label for="handle">Username</label>
@@ -16,5 +35,12 @@
   <button>Sign up</button>
 
 </form>
+
 <p>Already have an account? <a href="{{ url_for('login') }}">Log in here.</a></p>
+
+{% if rhandle -%}
+{% include '_about.html' %}
+{% include '_features.html' %}
+<script src="{{ url_for('static', filename='timedelta.js') }}"></script>
+{% endif %}
 {% endblock content %}

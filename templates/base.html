@@ -25,7 +25,7 @@
           <li><a href="{{ url_for('referrals') }}">Referrals</a></li>
 	  {%- if auth.is_authenticated() %}
           <li>
-            {{ session['h'] }}
+            ‹{{ session['h'] }}›
             (<a href="{{ url_for('logout') }}">log out</a>)
           </li>
           {%- else %}

@@ -1,29 +1,12 @@
 {% extends 'base.html' %}
 {% block title %}Welcome{% endblock title %}
 {% block content %}
-
 <p>
-  Welcome to this instance of LSDj Cloud. Here you can store and organize your
-  LSDj tracks. After uploading an SRAM dump from your Game Boy flash cartridge,
-  each LSDj track is extracted and stored in version control.
+  Welcome to this instance of LSDj Cloud!
+  {%- if auth.is_authenticated() %}
+  It's nice to have you here, ‹{{ session['h'] }}›.
+  {%- endif %}
 </p>
-
-<h2>Features</h2>
-
-<ul>
-  <li>Version control for your tracks</li>
-  <li>Revert songs back to old versions</li>
-  <li>Serverless</li>
-  <li>JS not required</li>
-  <li>
-    <del>
-      Assemble playlists for quick SRAM download of the latest versions of the
-      tracks in an album or performance set.
-    </del>
-    (soon)
-  </li>
-  <li><del>Handle LSDj compatibility</del> (later)</li>
-  <li><del>Create audio previews</del> (later)</li>
-  <li>Forever <a href="https://github.com/qguv/lsdj-cloud">open source</a></li>
-</ul>
+{% include '_about.html' %}
+{% include '_features.html' %}
 {% endblock content %}
