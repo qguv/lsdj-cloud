@@ -1,4 +1,4 @@
-from subprocess import run
+from subprocess import run, CalledProcessError
 from tempfile import TemporaryDirectory
 from pathlib import Path
 

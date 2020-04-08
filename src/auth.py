@@ -85,7 +85,7 @@ class Auth:
                             raise AuthError("Referral code is not valid")
                         self.redis.delete(f'referral:{rid}')
 
-                        uid = self.redis.incr('user:last')
+                        uid = self.redis.incr('user_last')
                         phash = self.bcrypt.generate_password_hash(password)
                         token = self.generate_token(uid)
                         now = int(datetime.utcnow().timestamp())

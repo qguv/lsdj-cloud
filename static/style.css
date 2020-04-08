@@ -101,6 +101,10 @@ h1 {
 }
 
 header h1, header h1 * {
+  text-decoration: none;
+}
+
+header h1, header h1 *, a.referral {
   font-family: "Droid Sans Mono", "Linux Libertine Mono", monospace;
 }
 
@@ -208,10 +212,25 @@ ul.flash {
   background-color: rgba(63, 127, 255, 0.8);
 }
 
+a.referral.new {
+  font-weight: bold;
+}
+
 a:not(.bare):hover {
   background: var(--horizontal-colors) text;
   color: transparent;
   border-bottom: 1px solid white;
+}
+
+a.delete {
+  color: tomato;
+}
+
+button.delete {
+  background: tomato;
+} button.delete:hover {
+  background: black;
+  color: tomato;
 }
 
 footer {

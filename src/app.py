@@ -7,13 +7,14 @@ from .store import Store
 from .flask import Flask
 from .models import Models
 
-from flask import request, redirect, url_for, render_template, flash, g
+from flask import request, redirect, url_for, render_template, flash, g, session
 from flask_bcrypt import Bcrypt
 from redis import Redis
 from werkzeug import exceptions
 from werkzeug.utils import secure_filename
 
 from pathlib import Path
+from datetime import timedelta
 
 app = Flask(__name__, static_folder='../static', template_folder='../templates')
 app.config.update(
@@ -50,7 +51,7 @@ def as_bytes(x: int) -> str:
 
 @app.after_request
 def security_headers(response):
-    response.headers['Content-Security-Policy'] = '''default-src 'none'; style-src 'self';'''
+    response.headers['Content-Security-Policy'] = '''default-src 'none'; script-src 'self'; style-src 'self';'''
     response.headers['X-Frame-Options'] = 'deny'
     response.headers['X-XSS-Protection'] = '1; mode=block'
     response.headers['X-Content-Type-Options'] = 'nosniff'
@@ -85,16 +86,56 @@ def referrals():
 
     if request.method == 'POST':
         try:
-            context['referral'] = rid = self.auth.generate_referral(uid)
-            context['referral_url'] = url_for('signup', referral=rid)
-        except AuthError:
+            context['new_rid'] = auth.generate_referral(uid)
+        except auth.AuthError:
             flash("You can't generate a referral right now.")
+        else:
+            flash("New referral generated!")
 
-    referral_cooldown = self.redis.ttl(f'referral_cooldown:{uid}')
+    prefix = 'referral:'
+    context['referrals'] = sorted(
+        (timedelta(seconds=redis.ttl(k)), k[len(prefix):])
+        for k in redis.keys(prefix + '*')
+        if redis.get(k) == session['u']
+    )
+
+    referral_cooldown = redis.ttl(f'referral_cooldown:{uid}')
     if referral_cooldown >= 0:
-        context['referral_cooldown'] = referral_cooldown + 1
+        context['referral_cooldown'] = timedelta(seconds=max(referral_cooldown, 1))
 
     return render_template('referrals.html', auth=auth, **context)
+
+@app.route_delete('/referrals', auth, name="all referrals")
+def referrals_delete():
+    uid = session['u']
+    prefix = 'referral:'
+
+    referrals = [
+        r
+        for r in redis.keys(prefix + '*')
+        if redis.get(r) == uid
+    ]
+
+    n = len(referrals)
+    for referral in referrals:
+        redis.delete(r)
+
+    if n:
+        flash(f"{n} referral{'' if n == 1 else 's'} deleted!")
+    else:
+        flash("No referrals to delete!")
+
+    return redirect(url_for('referrals'))
+
+@app.route_delete('/referrals/<name>', auth, name="this referral")
+def referral_delete(name):
+    ruid = redis.get(f'referral:{name}')
+    if session['u'] != ruid:
+        raise exceptions.Forbidden()
+
+    redis.delete(f'referral:{name}')
+    flash("Referral deleted.")
+    return redirect(url_for('referrals'))
 
 @app.route('/logout')
 def logout():
@@ -112,14 +153,18 @@ def sram_upload():
         with store.stash(request.files['sram']) as f:
 
             # split into track files
-            with liblsdj.split(f.name) as d:
-                trackpaths = {secure_filename(p.name): str(p) for p in Path(d).iterdir()}
+            try:
+                with liblsdj.split(f.name) as d:
+                    trackpaths = {secure_filename(p.name): str(p) for p in Path(d).iterdir()}
 
-                # ensure all paths are free
-                to_upload = list(store.new_files('track', trackpaths.keys()))
-                for name in to_upload:
-                    path = trackpaths[name]
-                    store.put('track', path, name=name)
+                    # ensure all paths are free
+                    to_upload = list(store.new_files('track', trackpaths.keys()))
+                    for name in to_upload:
+                        path = trackpaths[name]
+                        store.put('track', path, name=name)
+            except liblsdj.CalledProcessError:
+                flash("Couldn't process SRAM file; discarded!")
+                return redirect(url_for('srams'))
 
             # success! store sram in s3
             sram_name = store.put('sram', f.name)
@@ -163,26 +208,34 @@ def track_download(name, version):
     name = models.tracks()[name]['versions'][version]['full_name']
     return redirect(store.get_link('track', name))
 
-@app.route_delete('/srams/<name>', name="this SRAM file")
-@auth.required()
+@app.route_delete('/srams/<name>', auth, name="this SRAM file")
 def sram_delete(name):
     store.delete('sram', name)
+    flash(f"SRAM file {name} deleted.")
     return redirect(url_for('srams'))
 
-@app.route_delete('/tracks/<name>', name="all versions of this track")
-@auth.required()
+@app.route_delete('/tracks/<name>', auth, name="all versions of this track")
 def track_delete(name):
     tracks = models.tracks()
 
     res = redirect(url_for('tracks') if len(tracks) > 1 else url_for('srams'))
 
     track = tracks[name]
-    store.delete('track', [version['full_name'] for version in track['versions'].values()])
+    versions = [version['full_name'] for version in track['versions'].values()]
+    n = len(versions)
+    if n:
+        store.delete('track', versions)
+
+    if not n:
+        flash(f"No versions of track {name} to delete!")
+    if n == 1:
+        flash(f"Deleted the only version of track {name}.")
+    else:
+        flash(f"All {n} versions of track {name} deleted.")
 
     return res
 
-@app.route_delete('/tracks/<name>/<int:version>', name="this version of the track")
-@auth.required()
+@app.route_delete('/tracks/<name>/<int:version>', auth, name="this version of the track")
 def track_version_delete(name, version):
     tracks = models.tracks()
     track = tracks[name]
@@ -191,20 +244,40 @@ def track_version_delete(name, version):
     res = redirect(url_for('track', name=name) if len(track['versions']) > 1 else url_for('tracks') if len(tracks) > 1 else url_for('srams'))
 
     store.delete('track', version['full_name'])
+    flash(f"Version {version} of track {name} deleted.")
     return res
 
 # DEBUG
-@app.route_delete('/srams', name="all SRAM files")
-@auth.required()
+@app.route_delete('/srams', auth, name="all SRAM files")
 def srams_delete():
-    store.delete('sram', list(store.items('sram').keys()))
+    keys = list(store.items('sram').keys())
+    n = len(keys)
+    if n:
+        store.delete('sram', keys)
+
+    if not n:
+        flash("No SRAM files to delete!")
+    if n == 1:
+        flash(f"Deleted the only SRAM file.")
+    else:
+        flash(f"All {n} SRAM files deleted.")
     return redirect(url_for('srams'))
 
 # DEBUG
-@app.route_delete('/tracks', name="all versions of all tracks")
-@auth.required()
+@app.route_delete('/tracks', auth, name="all versions of all tracks")
 def tracks_delete():
-    store.delete('track', list(store.items('track').keys()))
+    keys = list(store.items('track').keys())
+    n = len(keys)
+    if n:
+        store.delete('track', keys)
+
+    if not n:
+        flash("No versions or tracks to delete!")
+    elif n == 1:
+        flash(f"Deleted the only track.")
+    else:
+        flash(f"Deleted {n} track versions.")
+
     return redirect(url_for('tracks'))
 
 # DEBUG

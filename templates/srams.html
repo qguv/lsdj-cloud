@@ -9,6 +9,7 @@
   <li>
     <a href="{{ url_for('sram_download', name=name) }}">{{ name }}</a>
     ({{ sram.size | as_bytes }})
+    <a class="delete" href="{{ url_for('sram_delete', name=name) }}">delete?</a>
   </li>
   {%- endfor %}
 </ol>
@@ -25,10 +26,15 @@
   <a class="bare" href="{{ url_for('login', r='/'+request.path) }}"><label>Upload SRAM file</label></a>
   {%- endif %}
 
-  <input hidden aria-hidden="false" id="sram" name="sram" type="file" onchange="form.submit()" required>
+  <input hidden aria-hidden="false" id="sram" name="sram" type="file" required>
   <input value="...OK" disabled>
 
   <button>Upload</button>
 
 </form>
+
+<!-- Entirely optional script to improve form submission UX. -->
+<script src="{{ url_for('static', filename='submit_after_pick.js') }}"></script>
+<link href="{{ url_for('static', filename='spinner.css') }}" rel="stylesheet" type="text/css">
+
 {% endblock content %}

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=435, user-scalable=0">
-  <link href="/static/style.css" rel="stylesheet" type="text/css">
+  <link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet" type="text/css">
   <title>LSDj Cloud » {% block title %}{% endblock title %}</title>
 </head>
 <body>
@@ -25,7 +25,7 @@
           <li><a href="{{ url_for('referrals') }}">Referrals</a></li>
 	  {%- if auth.is_authenticated() %}
           <li>
-            {{ session['u'] }}
+            {{ session['h'] }}
             (<a href="{{ url_for('logout') }}">log out</a>)
           </li>
           {%- else %}

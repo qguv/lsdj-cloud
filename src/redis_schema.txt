@@ -1,6 +1,6 @@
 handles[str]    uid
 
-user:last       uid
+user_last       uid
 user:{uid}
     handle      str
     phash       str

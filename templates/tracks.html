@@ -17,6 +17,7 @@
     {%- else %}
     ({{ track.versions | length }} versions, {{ track.size | as_bytes }} total)
     {%- endif %}
+    <a class="delete" href="{{ url_for('track_delete', name=name) }}">delete?</a>
   </li>
   {%- endfor %}
 </ol>
