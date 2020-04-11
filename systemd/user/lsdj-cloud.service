@@ -3,5 +3,4 @@ Description=Chiptune track sharing network
 
 [Service]
 WorkingDirectory=%h/dev/lsdj-cloud
-EnvironmentFile=%h/dev/lsdj-cloud/lsdj-cloud.conf
 ExecStart=/usr/bin/pipenv run ./lsdj-cloud --debug

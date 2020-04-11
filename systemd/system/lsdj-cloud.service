@@ -1,12 +1,16 @@
 [Unit]
-Description=LSDj Cloud server
+Description=Chiptune track sharing network
 Requires=nginx.service
+Requires=redis.service
 After=network.target
 
 [Service]
 User=lsdj-cloud
-WorkingDirectory=/var/lib/lsdj.cloud
-ExecStart=/usr/local/lib/lsdj.cloud/.venv/bin/python /usr/local/lib/lsdj.cloud/lsdj-cloud
+
+# pwd of server should be one with no secrets
+WorkingDirectory=/var/lib/lsdj-cloud
+Environment=PIPENV_PIPFILE=/usr/local/lib/lsdj-cloud/Pipfile
+ExecStart=/usr/bin/pipenv run /usr/local/lib/lsdj-cloud/lsdj-cloud
 Restart=always
 RestartDelay=10s
 
