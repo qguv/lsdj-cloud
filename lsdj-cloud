@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 
 from src.app import app
-from src.env import inject_flask_secret
 
 from sys import argv
 
-inject_flask_secret(app)
 app.run(debug='--debug' in argv[1:])
