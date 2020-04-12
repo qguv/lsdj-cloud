@@ -5,7 +5,7 @@ from . import env
 from .auth import Auth
 from .store import Store
 from .flask import Flask
-from .models import Models
+from .s3_models import S3Models
 
 from flask import request, redirect, url_for, render_template, flash, g, session
 from flask_bcrypt import Bcrypt
@@ -36,7 +36,8 @@ store = Store(**env.store_config())
 
 auth = Auth(redis=redis, bcrypt=bcrypt, **env.auth_config())
 
-models = Models(store)
+
+s3_models = S3Models(store)
 
 # TODO this should somehow be elsewhere
 @app.template_filter('as_bytes')
@@ -200,12 +201,12 @@ def sram_upload():
 @app.route('/srams')
 #DEBUG @auth.required
 def srams():
-    return render_template('srams.html', auth=auth, srams=sorted(models.srams().items()), total_size=store.usage('sram'))
+    return render_template('srams.html', auth=auth, srams=sorted(s3_models.srams().items()), total_size=store.usage('sram'))
 
 @app.route('/tracks')
 #DEBUG @auth.required
 def tracks():
-    tracks = sorted(models.tracks().items())
+    tracks = sorted(s3_models.tracks().items())
     total_size = store.usage('track')
     return render_template('tracks.html', auth=auth, tracks=tracks, total_size=total_size)
 
@@ -213,7 +214,7 @@ def tracks():
 #DEBUG @auth.required
 def track(name):
     # TODO wasteful
-    track = models.tracks()[name]
+    track = s3_models.tracks()[name]
     return render_template('track.html', auth=auth, name=name, track=track)
 
 @app.route('/srams/<name>/download')
@@ -224,7 +225,7 @@ def sram_download(name):
 @app.route('/tracks/<name>/<int:version>/download')
 @auth.required()
 def track_download(name, version):
-    name = models.tracks()[name]['versions'][version]['full_name']
+    name = s3_models.tracks()[name]['versions'][version]['full_name']
     return redirect(store.get_link('track', name))
 
 @app.route_delete('/srams/<name>', auth, name="this SRAM file")
@@ -235,7 +236,7 @@ def sram_delete(name):
 
 @app.route_delete('/tracks/<name>', auth, name="all versions of this track")
 def track_delete(name):
-    tracks = models.tracks()
+    tracks = s3_models.tracks()
 
     res = redirect(url_for('tracks') if len(tracks) > 1 else url_for('srams'))
 
@@ -256,7 +257,7 @@ def track_delete(name):
 
 @app.route_delete('/tracks/<name>/<int:version>', auth, name="this version of the track")
 def track_version_delete(name, version):
-    tracks = models.tracks()
+    tracks = s3_models.tracks()
     track = tracks[name]
     version = track['versions'][version]
 
