@@ -9,7 +9,6 @@ from .s3_models import S3Models
 
 from flask import request, redirect, url_for, render_template, flash, g, session
 from flask_bcrypt import Bcrypt
-from flask_sqlalchemy import SQLAlchemy
 from redis import Redis
 from werkzeug import exceptions
 from werkzeug.utils import secure_filename
@@ -23,7 +22,6 @@ app.config.update(
     SESSION_COOKIE_SECURE=True,
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE='Strict',
-    SQLALCHEMY_TRACK_MODIFICATIONS=False,
     **env.flask_config(),
 )
 
@@ -38,7 +36,6 @@ store = Store(**env.store_config())
 
 auth = Auth(redis=redis, bcrypt=bcrypt, **env.auth_config())
 
-db = SQLAlchemy(app)
 
 s3_models = S3Models(store)
 

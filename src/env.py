@@ -72,5 +72,4 @@ def auth_config():
 def flask_config():
     return env2dict(
         SECRET_KEY=_str('SECRET_KEY'),
-        SQLALCHEMY_DATABASE_URI=_str('DATABASE_URI'),
     )
