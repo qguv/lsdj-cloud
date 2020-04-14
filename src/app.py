@@ -1,43 +1,72 @@
 #!/usr/bin/env python3
 
-from . import liblsdj
 from . import env
+from . import liblsdj
+
 from .auth import Auth
-from .store import Store
 from .flask import Flask
 from .s3_models import S3Models
+from .store import Store
 
 from flask import request, redirect, url_for, render_template, flash, g, session
 from flask_bcrypt import Bcrypt
+from flask_migrate import Migrate
+from flask_sqlalchemy import SQLAlchemy
 from redis import Redis
+from sqlalchemy_utils import UUIDType, force_auto_coercion, force_instant_defaults
 from werkzeug import exceptions
 from werkzeug.utils import secure_filename
 
-from pathlib import Path
 from datetime import timedelta
+from pathlib import Path
 from urllib.parse import urlparse, parse_qs
 
 app = Flask(__name__, static_folder='../static', template_folder='../templates')
 app.config.update(
-    SESSION_COOKIE_SECURE=True,
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE='Strict',
+    SESSION_COOKIE_SECURE=True,
+    SQLALCHEMY_TRACK_MODIFICATIONS=False,
     **env.flask_config(),
 )
 
 bcrypt = Bcrypt(app)
 
+#TODO remove or integrate with db
 redis = Redis(
     decode_responses=True,
     **env.redis_config(),
 )
 
-store = Store(**env.store_config())
-
 auth = Auth(redis=redis, bcrypt=bcrypt, **env.auth_config())
 
+#TODO remove or integrate with db
+store = Store(**env.store_config())
 
 s3_models = S3Models(store)
+
+force_auto_coercion()
+force_instant_defaults()
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+
+class User(db.Model):
+    id = db.Column(UUIDType, primary_key=True)
+    created_on = db.Column(db.DateTime, default=datetime.now, nullable=False)
+
+    handle = db.Column(db.String(80), unique=True, nullable=False)
+    phash = db.Column(db.Binary(60), nullable=False)
+
+    invitation_cooldown_expires = db.Column(db.DateTime, nullable=True)
+
+    last_login_on = db.Column(db.DateTime, nullable=False)
+
+    invited_on = db.Column(db.DateTime, nullable=False)
+    invited_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    joined_on = db.Column(db.DateTime, nullable=False)
+
+class Invitation(db.Model):
+    id = db.Column(UUIDType, primary_key=True)
 
 # TODO this should somehow be elsewhere
 @app.template_filter('as_bytes')

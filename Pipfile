@@ -11,6 +11,9 @@ boto3 = "*"
 Flask = "*"
 redis = "*"
 flask-bcrypt = "*"
+flask-sqlalchemy = "*"
+sqlalchemy-utils = "*"
+flask-migrate = "*"
 
 [requires]
 python_version = "3.8"

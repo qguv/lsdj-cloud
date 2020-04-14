@@ -11,6 +11,7 @@ User=lsdj-cloud
 WorkingDirectory=/var/lib/lsdj-cloud
 Environment=PIPENV_PIPFILE=/usr/local/lib/lsdj-cloud/Pipfile
 Environment=PIPENV_DOTENV_LOCATION=/etc/lsdj-cloud.conf
+ExecStartPre=/usr/bin/pipenv run flask db upgrade
 ExecStart=/usr/bin/pipenv run /usr/local/lib/lsdj-cloud/lsdj-cloud
 Restart=always
 RestartDelay=10s

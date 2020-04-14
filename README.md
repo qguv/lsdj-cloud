@@ -24,6 +24,7 @@ First, take care of some common prerequisites:
   - install `python-pipenv` using your system's package manager
     - if your system doesn't provide that natively, try `sudo pip install pipenv`
   - install and configure a **redis server** somewhere and put the credentials in `lsdj-cloud.conf`
+  - install and configure a **meriadb server** somewhere and put the credentials in `lsdj-cloud.conf`
   - sign up for an **S3 service** somewhere and put the credentials in `lsdj-cloud.conf`
     - Amazon S3 is expensive; consider Scaleway or Wasabi which are far cheaper
     - alternatively, use a local minio s3-compatible server (especially useful for development)

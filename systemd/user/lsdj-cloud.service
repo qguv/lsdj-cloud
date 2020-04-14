@@ -3,4 +3,5 @@ Description=Chiptune track sharing network
 
 [Service]
 WorkingDirectory=%h/dev/lsdj-cloud
+ExecStartPre=/usr/bin/pipenv run flask db upgrade
 ExecStart=/usr/bin/pipenv run ./lsdj-cloud --debug
