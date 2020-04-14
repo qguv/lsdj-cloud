@@ -1,14 +1,17 @@
 from os import environ
 from sys import exit
 
+
 def _str(k):
     try:
         yield environ[k]
     except KeyError:
         raise ValueError(f"environment variable {k} must be present")
 
+
 def _maybe_str(k):
     yield environ.get(k)
+
 
 def _truthy_str(k, msg=None):
     v = environ[k]
@@ -17,11 +20,13 @@ def _truthy_str(k, msg=None):
     else:
         raise ValueError(f"environment varible {k} must be set")
 
+
 def _int(k):
     try:
         yield int(next(_str(k)))
     except ValueError:
         raise ValueError(f"environment variable {k} must be an integer")
+
 
 def _maybe_int(k):
     try:
@@ -30,6 +35,7 @@ def _maybe_int(k):
         yield None
     except ValueError:
         raise ValueError(f"environment variable {k} must be an integer")
+
 
 def env2dict(**conf_map):
     d = {}
@@ -47,6 +53,7 @@ def env2dict(**conf_map):
     else:
         return d
 
+
 def redis_config():
     return env2dict(
         unix_socket_path=_maybe_str('REDIS_SOCKET'),
@@ -55,6 +62,7 @@ def redis_config():
         password=_maybe_str('REDIS_PASSWORD'),
     )
 
+
 def store_config():
     return env2dict(
         s3_bucket=_maybe_str('S3_BUCKET'),
@@ -62,6 +70,7 @@ def store_config():
         s3_key_id=_maybe_str('S3_KEY_ID'),
         s3_secret=_maybe_str('S3_SECRET'),
     )
+
 
 def auth_config():
     return env2dict(

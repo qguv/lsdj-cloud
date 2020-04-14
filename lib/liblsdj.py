@@ -1,9 +1,10 @@
-from subprocess import run, CalledProcessError
+from subprocess import run
 from tempfile import TemporaryDirectory
 from pathlib import Path
 
 liblsdj_bin = Path(__file__).parent.parent / 'deps/linux-amd64/bin'
 export = liblsdj_bin / 'lsdsng-export'
+
 
 def split(sav_path: str) -> TemporaryDirectory:
     d = TemporaryDirectory()
@@ -15,8 +16,13 @@ def split(sav_path: str) -> TemporaryDirectory:
 
     return d
 
+
 def peek(sav_path):
-    res = run([export, '-up', sav_path], check=True, capture_output=True).stdout.decode()
+    res = run(
+        [export, '-up', sav_path],
+        check=True,
+        capture_output=True,
+    ).stdout.decode()
     for song in res.strip().split('\n')[1:]:
         try:
             no = int(song[0:4].strip())
@@ -29,8 +35,6 @@ def peek(sav_path):
             ver = int(song[13:15].strip(), base=16)
         except ValueError:
             ver = None
-
-        fmt = song[15:18].strip()
 
         if ver is not None:
             yield (no, name, ver)

@@ -17,7 +17,10 @@ class S3Models:
 
             tracks[name] = tracks.get(name, dict(versions=dict(), size=0))
             tracks[name]['size'] += obj.size
-            tracks[name]['versions'][version] = dict(size=obj.size, full_name=full_name)
+            tracks[name]['versions'][version] = dict(
+                size=obj.size,
+                full_name=full_name,
+            )
         return tracks
 
     def srams(self):

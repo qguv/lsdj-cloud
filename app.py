@@ -1,27 +1,33 @@
 #!/usr/bin/env python3
 
-from . import env
-from . import liblsdj
+from lib import env
+from lib import liblsdj
 
-from .auth import Auth
-from .flask import Flask
-from .s3_models import S3Models
-from .store import Store
+from lib.auth import Auth
+from lib.flask import Flask
+from lib.s3_models import S3Models
+from lib.store import Store
 
-from flask import request, redirect, url_for, render_template, flash, g, session
+from flask import request, redirect, url_for, render_template, flash, \
+    session
 from flask_bcrypt import Bcrypt
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from redis import Redis
-from sqlalchemy_utils import UUIDType, force_auto_coercion, force_instant_defaults
+from sqlalchemy_utils import force_auto_coercion, force_instant_defaults
 from werkzeug import exceptions
 from werkzeug.utils import secure_filename
 
 from datetime import timedelta
 from pathlib import Path
 from urllib.parse import urlparse, parse_qs
+from sys import argv
 
-app = Flask(__name__, static_folder='../static', template_folder='../templates')
+app = Flask(
+    __name__,
+    static_folder='static',
+    template_folder='templates',
+)
 app.config.update(
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE='Strict',
@@ -32,7 +38,7 @@ app.config.update(
 
 bcrypt = Bcrypt(app)
 
-#TODO remove or integrate with db
+# TODO remove or integrate with db
 redis = Redis(
     decode_responses=True,
     **env.redis_config(),
@@ -40,7 +46,7 @@ redis = Redis(
 
 auth = Auth(redis=redis, bcrypt=bcrypt, **env.auth_config())
 
-#TODO remove or integrate with db
+# TODO remove or integrate with db
 store = Store(**env.store_config())
 
 s3_models = S3Models(store)
@@ -50,23 +56,6 @@ force_instant_defaults()
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
-class User(db.Model):
-    id = db.Column(UUIDType, primary_key=True)
-    created_on = db.Column(db.DateTime, default=datetime.now, nullable=False)
-
-    handle = db.Column(db.String(80), unique=True, nullable=False)
-    phash = db.Column(db.Binary(60), nullable=False)
-
-    invitation_cooldown_expires = db.Column(db.DateTime, nullable=True)
-
-    last_login_on = db.Column(db.DateTime, nullable=False)
-
-    invited_on = db.Column(db.DateTime, nullable=False)
-    invited_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    joined_on = db.Column(db.DateTime, nullable=False)
-
-class Invitation(db.Model):
-    id = db.Column(UUIDType, primary_key=True)
 
 # TODO this should somehow be elsewhere
 @app.template_filter('as_bytes')
@@ -81,28 +70,35 @@ def as_bytes(x: int) -> str:
     prefix = 'kMGTEPEZY'[(digits - 4) // 3]
     return f'{s[:split]}.{s[split:3]}'.rstrip('.') + f' {prefix}B'
 
+
 @app.after_request
 def security_headers(response):
-    response.headers['Content-Security-Policy'] = '''default-src 'none'; script-src 'self'; style-src 'self';'''
+    response.headers['Content-Security-Policy'] = \
+        "default-src 'none'; script-src 'self'; style-src 'self';"
     response.headers['X-Frame-Options'] = 'deny'
     response.headers['X-XSS-Protection'] = '1; mode=block'
     response.headers['X-Content-Type-Options'] = 'nosniff'
-    response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+    response.headers['Strict-Transport-Security'] = \
+        'max-age=31536000; includeSubDomains'
     response.headers['Referrer-Policy'] = 'no-referrer'
     return response
+
 
 @app.route('/ok')
 def ok():
     return 'ok'
 
+
 @app.route('/')
 def root():
     return render_template('root.html', auth=auth)
+
 
 @app.route('/login', methods=('GET', 'POST'))
 @auth.login_form(success_redirect='root')
 def login():
     return render_template('login.html', auth=auth)
+
 
 @app.route('/signup', methods=('GET', 'POST'))
 @app.route('/signup/<uuid:rid>', methods=('GET',))
@@ -121,6 +117,7 @@ def signup(rid=None):
 
     return render_template('signup.html', auth=auth, rid=rid, **context)
 
+
 # TODO: URLs are wrong in the POST response but correct in the GET response
 @app.route('/referrals', methods=('GET', 'POST'))
 @auth.required()
@@ -134,7 +131,9 @@ def referrals():
             flash("New referral generated!")
             return redirect(url_for('referrals', n=new_rid))
         except auth.AuthError:
-            raise exceptions.TooManyRequests("You can't generate a referral right now.")
+            raise exceptions.TooManyRequests(
+                "You can't generate a referral right now."
+            )
 
     prefix = 'referral:'
     context['referrals'] = sorted(
@@ -144,15 +143,17 @@ def referrals():
     )
 
     try:
-        context["new_rid"] = parse_qs(urlparse(request.full_path).query)['n'][0]
+        query = urlparse(request.full_path).query
+        context["new_rid"] = parse_qs(query)['n'][0]
     except KeyError:
         pass
 
-    referral_cooldown = redis.ttl(f'referral_cooldown:{uid}')
-    if referral_cooldown >= 0:
-        context['referral_cooldown'] = timedelta(seconds=max(referral_cooldown, 1))
+    cooldown = redis.ttl(f'referral_cooldown:{uid}')
+    if cooldown >= 0:
+        context['referral_cooldown'] = timedelta(seconds=max(cooldown, 1))
 
     return render_template('referrals.html', auth=auth, **context)
+
 
 @app.route_delete('/referrals', auth, name="all referrals")
 def referrals_delete():
@@ -166,7 +167,7 @@ def referrals_delete():
     ]
 
     n = len(referrals)
-    for referral in referrals:
+    for r in referrals:
         redis.delete(r)
 
     if n:
@@ -175,6 +176,7 @@ def referrals_delete():
         flash("No referrals to delete!")
 
     return redirect(url_for('referrals'))
+
 
 @app.route_delete('/referrals/<uuid:name>', auth, name="this referral")
 def referral_delete(name):
@@ -186,10 +188,12 @@ def referral_delete(name):
     flash("Referral deleted.")
     return redirect(url_for('referrals'))
 
+
 @app.route('/logout')
 def logout():
     auth.deauth()
     return redirect(url_for('root'))
+
 
 @app.route('/srams', methods=('POST',))
 @auth.required()
@@ -204,10 +208,16 @@ def sram_upload():
             # split into track files
             try:
                 with liblsdj.split(f.name) as d:
-                    trackpaths = {secure_filename(p.name): str(p) for p in Path(d).iterdir()}
+                    trackpaths = {
+                        secure_filename(p.name): str(p)
+                        for p in Path(d).iterdir()
+                    }
 
                     # ensure all paths are free
-                    to_upload = list(store.new_files('track', trackpaths.keys()))
+                    to_upload = list(store.new_files(
+                        'track',
+                        trackpaths.keys(),
+                    ))
                     for name in to_upload:
                         path = trackpaths[name]
                         store.put('track', path, name=name)
@@ -216,40 +226,57 @@ def sram_upload():
                 return redirect(url_for('srams'))
 
             # success! store sram in s3
-            sram_name = store.put('sram', f.name)
+            sram = store.put('sram', f.name)
 
-            msg = f"{len(to_upload)} new tracks saved from SRAM file {sram_name}"
+            msg = f"{len(to_upload)} new tracks saved from SRAM file {sram}"
             if len(to_upload) < len(trackpaths):
-                msg += f" ({len(trackpaths) - len(to_upload)} tracks existed already)"
+                existed = len(trackpaths) - len(to_upload)
+                msg += f" ({existed} tracks existed already)"
             flash(msg)
 
         # TODO automatically make a playlist for each uploaded SRAM
-        # TODO you should optionally be able to fix an old version of a track on a playlist
+        # TODO you should optionally be able to fix an old version of a track
+        #      on a playlist
         return redirect(url_for('srams'))
 
+
 @app.route('/srams')
-#DEBUG @auth.required
+# DEBUG @auth.required
 def srams():
-    return render_template('srams.html', auth=auth, srams=sorted(s3_models.srams().items()), total_size=store.usage('sram'))
+    return render_template(
+        'srams.html',
+        auth=auth,
+        srams=sorted(s3_models.srams().items()),
+        total_size=store.usage('sram'),
+    )
+
 
 @app.route('/tracks')
-#DEBUG @auth.required
+# DEBUG @auth.required
 def tracks():
     tracks = sorted(s3_models.tracks().items())
     total_size = store.usage('track')
-    return render_template('tracks.html', auth=auth, tracks=tracks, total_size=total_size)
+    return render_template(
+        'tracks.html',
+        auth=auth,
+        tracks=tracks,
+        total_size=total_size,
+    )
+
 
 @app.route('/tracks/<name>')
-#DEBUG @auth.required
+# DEBUG @auth.required
 def track(name):
     # TODO wasteful
     track = s3_models.tracks()[name]
     return render_template('track.html', auth=auth, name=name, track=track)
 
+
 @app.route('/srams/<name>/download')
 @auth.required()
 def sram_download(name):
     return redirect(store.get_link('sram', name))
+
 
 @app.route('/tracks/<name>/<int:version>/download')
 @auth.required()
@@ -257,11 +284,13 @@ def track_download(name, version):
     name = s3_models.tracks()[name]['versions'][version]['full_name']
     return redirect(store.get_link('track', name))
 
+
 @app.route_delete('/srams/<name>', auth, name="this SRAM file")
 def sram_delete(name):
     store.delete('sram', name)
     flash(f"SRAM file {name} deleted.")
     return redirect(url_for('srams'))
+
 
 @app.route_delete('/tracks/<name>', auth, name="all versions of this track")
 def track_delete(name):
@@ -284,17 +313,27 @@ def track_delete(name):
 
     return res
 
-@app.route_delete('/tracks/<name>/<int:version>', auth, name="this version of the track")
+
+@app.route_delete(
+    '/tracks/<name>/<int:version>',
+    auth,
+    name="this version of the track",
+)
 def track_version_delete(name, version):
     tracks = s3_models.tracks()
     track = tracks[name]
     version = track['versions'][version]
 
-    res = redirect(url_for('track', name=name) if len(track['versions']) > 1 else url_for('tracks') if len(tracks) > 1 else url_for('srams'))
+    res = redirect(
+        url_for('track', name=name) if len(track['versions']) > 1
+        else url_for('tracks') if len(tracks) > 1
+        else url_for('srams')
+    )
 
     store.delete('track', version['full_name'])
     flash(f"Version {version} of track {name} deleted.")
     return res
+
 
 # DEBUG
 @app.route_delete('/srams', auth, name="all SRAM files")
@@ -311,6 +350,7 @@ def srams_delete():
     else:
         flash(f"All {n} SRAM files deleted.")
     return redirect(url_for('srams'))
+
 
 # DEBUG
 @app.route_delete('/tracks', auth, name="all versions of all tracks")
@@ -329,7 +369,12 @@ def tracks_delete():
 
     return redirect(url_for('tracks'))
 
+
 # DEBUG
 @app.route('/long')
 def long():
     return render_template('long.html', auth=auth)
+
+
+if __name__ == "__main__":
+    app.run(debug='--debug' in argv[1:])

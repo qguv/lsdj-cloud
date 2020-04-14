@@ -2,16 +2,18 @@ from flask import g
 
 from functools import wraps
 
+
 def memo(f):
     @wraps(f)
     def wrapping(*args, **kwargs):
-        assert not kwargs, "functions accepting kwargs can't be memo'd yet!" # TODO
+        # TODO
+        assert not kwargs, "functions accepting kwargs can't be memo'd yet!"
 
         if 'memo' not in g:
             g.memo = dict(stats=dict())
 
         f_memo = g.memo[f] = g.memo.get(f, dict())
-        f_stats = g.memo['stats'][f] = g.memo['stats'].get(f, dict(hit=0, miss=0))
+        f_stats = g.memo['stats'][f] = g.memo['stats'].get(f, dict(hit=0, miss=0))  # noqa: E501
 
         try:
             v = f_memo[args]
@@ -26,4 +28,3 @@ def memo(f):
         return v
 
     return wrapping
-

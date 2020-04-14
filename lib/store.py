@@ -1,17 +1,16 @@
 from .memo import memo
 
 import boto3
-from flask import g
 from werkzeug.utils import secure_filename
 from werkzeug import exceptions
 
 from time import time
-from io import BytesIO
-from functools import wraps
 from tempfile import NamedTemporaryFile
+
 
 def _new_filename() -> str:
     return f"{str(time()).replace('.', '_')}.sram"
+
 
 def _check_secure_filename(filenames: str or list([str])):
     if isinstance(filenames, str):
@@ -23,14 +22,15 @@ def _check_secure_filename(filenames: str or list([str])):
             raise exceptions.BadRequest(f"File {filename} is not secure!")
     return filenames
 
+
 def _with_trailing_slash(path):
     if path.endswith('/'):
         return path
     else:
         return path + '/'
 
-class Store:
 
+class Store:
     def __init__(self, s3_bucket, s3_url, s3_key_id, s3_secret):
         config = dict(
             endpoint_url=s3_url,
@@ -43,7 +43,7 @@ class Store:
         self.bucket = self.s3.Bucket(s3_bucket)
 
     @staticmethod
-    def stash(mf: 'binary-opened file') -> NamedTemporaryFile:
+    def stash(mf: 'binary-opened file') -> NamedTemporaryFile:  # noqa: F722
         '''Temporarily stash file stream on disk.'''
         tf = NamedTemporaryFile()
         mf.save(tf.name)
@@ -53,7 +53,10 @@ class Store:
     def items(self, path) -> dict(name="boto3.S3.ObjectSummary"):
         path = _with_trailing_slash(path)
         trim = len(path)
-        return {obj.key[trim:]: obj for obj in self.bucket.objects.filter(Prefix=path)}
+        return {
+            obj.key[trim:]: obj
+            for obj in self.bucket.objects.filter(Prefix=path)
+        }
 
     def assert_exists(self, path, filenames: str or [str]) -> bool:
         if isinstance(filenames, str):
@@ -77,17 +80,24 @@ class Store:
         else:
             # make sure it doesn't already exist
             if not any(self.new_files(path, [name])):
-                raise exceptions.Conflict(f"{path} file {filename} already exists")
+                raise exceptions.Conflict(f"{path} file {name} already exists")
 
-        self.bucket.upload_file(local_path, _with_trailing_slash(path) + _check_secure_filename(name))
+        self.bucket.upload_file(
+            local_path,
+            _with_trailing_slash(path) + _check_secure_filename(name),
+        )
         return name
 
-    def get_link(self, path, filename: str) -> 'binary buffer':
+    def get_link(self, path, filename: str) -> 'binary buffer':  # noqa: F722
         params = dict(
             Bucket=self.bucket.name,
             Key=_with_trailing_slash(path) + _check_secure_filename(filename),
         )
-        return self.client.generate_presigned_url('get_object', Params=params, ExpiresIn=60)
+        return self.client.generate_presigned_url(
+            'get_object',
+            Params=params,
+            ExpiresIn=60,
+        )
 
     def delete(self, path, filenames=None):
         if filenames is None:

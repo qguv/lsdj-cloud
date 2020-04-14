@@ -1,12 +1,14 @@
-from flask import request, redirect, url_for, flash, session, escape, g
+from flask import request, redirect, url_for, flash, session, escape
 from urllib.parse import urlparse, parse_qs
 from uuid import uuid4
 from datetime import datetime
 
 from functools import wraps
 
+
 class AuthError(Exception):
     pass
+
 
 class Auth:
     def __init__(self, redis, bcrypt, token_ttl):
@@ -29,7 +31,6 @@ class Auth:
             return
 
         uid = session['u']
-        token = session['t']
 
         self.redis.delete(f'token:{uid}')
         del session['t']
@@ -46,7 +47,7 @@ class Auth:
 
         rid = str(uuid4())
 
-        #TODO atomic
+        # TODO atomic
         self.redis.setex(f'referral:{rid}', 60 * 60 * 24 * 7, uid)
         self.redis.setex(f'referral_cooldown:{uid}', 60 * 60 * 24, 1)
 
@@ -71,13 +72,21 @@ class Auth:
                             raise AuthError()
 
                         if len(handle) < 3:
-                            raise AuthError("Handle must be at least 3 characters!")
+                            raise AuthError(
+                                "Handle must be at least 3 characters!"
+                            )
 
                         if self.redis.hget('handles', handle) is not None:
-                            raise AuthError("That handle is taken! Please choose a different one.")
+                            raise AuthError(
+                                "That handle is taken! Please choose a "
+                                "different one."
+                            )
 
                         if len(password) < 8:
-                            return AuthError("Password must be at least 8 characters!")
+                            return AuthError(
+                                "Password must be at least 8 "
+                                "characters!"
+                            )
 
                         ruid = self.redis.get(f'referral:{rid}')
                         if ruid is None:
@@ -94,7 +103,11 @@ class Auth:
                         self.redis.hset(f'user:{uid}', 'phash', phash)
                         self.redis.hset(f'user:{uid}', 'joined_at', now)
                         self.redis.hset(f'user:{uid}', 'referred_by', ruid)
-                        self.redis.setex(f'referral_cooldown:{uid}', 60 * 60 * 24, 1)
+                        self.redis.setex(
+                            f'referral_cooldown:{uid}',
+                            60 * 60 * 24,
+                            1,
+                        )
 
                         # store session info
                         session['h'] = handle
@@ -105,8 +118,11 @@ class Auth:
                         return redirect(url_for(success_redirect))
 
                     except AuthError as e:
-                        s = str(e)
-                        flash(s if s else "Please enter a referral code, handle, and password.")
+                        s = str(e) or (
+                            "Please enter a referral code, handle, and "
+                            "password."
+                        )
+                        flash(s)
                         # TODO auto-fill referral from last time
 
                 # TODO auto-fill handle if known
@@ -137,7 +153,7 @@ class Auth:
                         if phash is None:
                             raise AuthError()
 
-                        if not self.bcrypt.check_password_hash(phash, password):
+                        if not self.bcrypt.check_password_hash(phash, password):  # noqa: E501
                             raise AuthError()
 
                         token = self.generate_token(uid)
@@ -150,8 +166,12 @@ class Auth:
                         flash(f"Welcome back, {escape(handle)}!")
 
                         try:
-                            return_to = parse_qs(urlparse(request.referrer).query)['r'][0]
-                            return redirect(f"/{return_to}" if return_to else url_for(success_redirect))
+                            query = urlparse(request.referrer).query
+                            return_to = parse_qs(query)['r'][0]
+                            return redirect(
+                                f"/{return_to}" if return_to
+                                else url_for(success_redirect)
+                            )
                         except KeyError:
                             return redirect(url_for(success_redirect))
 
@@ -161,7 +181,7 @@ class Auth:
                         flash(s if s else "Login incorrect.")
 
                 if request.args.get('r'):
-                    # TODO different messages for session timeout and unauthenticated
+                    # TODO different messages for timeout and unauthenticated
                     flash("You need to log in first.")
 
                 # TODO auto-fill handle if known
@@ -176,6 +196,7 @@ class Auth:
                 if self.is_authenticated():
                     return wrapped(*args, **kwargs)
                 else:
-                    return redirect(url_for('login', r=request.full_path.lstrip('/').rstrip('?')))
+                    url = request.full_path.lstrip('/').rstrip('?')
+                    return redirect(url_for('login', r=url))
             return wrapping
         return decorator

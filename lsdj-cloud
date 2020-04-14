@@ -1,7 +1,0 @@
-#!/usr/bin/env python3
-
-from src.app import app
-
-from sys import argv
-
-app.run(debug='--debug' in argv[1:])
