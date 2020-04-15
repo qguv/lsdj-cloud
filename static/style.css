@@ -104,7 +104,7 @@ header h1, header h1 * {
   text-decoration: none;
 }
 
-header h1, header h1 *, a.referral {
+header h1, header h1 *, a.invitation {
   font-family: "Droid Sans Mono", "Linux Libertine Mono", monospace;
 }
 

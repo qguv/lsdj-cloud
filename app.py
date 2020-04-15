@@ -2,23 +2,22 @@
 
 from lib import env
 from lib import liblsdj
-
 from lib.auth import Auth
+from lib.db import db
 from lib.flask import Flask
 from lib.s3_models import S3Models
 from lib.store import Store
+from models.invitation import Invitation
 
 from flask import request, redirect, url_for, render_template, flash, \
-    session
+    session, g
 from flask_bcrypt import Bcrypt
 from flask_migrate import Migrate
-from flask_sqlalchemy import SQLAlchemy
 from redis import Redis
-from sqlalchemy_utils import force_auto_coercion, force_instant_defaults
 from werkzeug import exceptions
 from werkzeug.utils import secure_filename
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 from pathlib import Path
 from urllib.parse import urlparse, parse_qs
 from sys import argv
@@ -44,17 +43,15 @@ redis = Redis(
     **env.redis_config(),
 )
 
-auth = Auth(redis=redis, bcrypt=bcrypt, **env.auth_config())
-
 # TODO remove or integrate with db
 store = Store(**env.store_config())
 
 s3_models = S3Models(store)
 
-force_auto_coercion()
-force_instant_defaults()
-db = SQLAlchemy(app)
+db.init_app(app)
 migrate = Migrate(app, db)
+
+auth = Auth(db=db, redis=redis, bcrypt=bcrypt, **env.auth_config())
 
 
 # TODO this should somehow be elsewhere
@@ -122,37 +119,54 @@ def signup(rid=None):
 @app.route('/referrals', methods=('GET', 'POST'))
 @auth.required()
 def referrals():
-    uid = session['u']
     context = dict()
 
+    now = datetime.utcnow()
+    last_invitation = g.user.invitations \
+        .order_by(Invitation.created.desc()) \
+        .first()
+    last_activity = g.user.created \
+        if last_invitation is None \
+        else last_invitation.created
+    cooled_after = last_activity + timedelta(days=1)
+    cooldown = cooled_after - now if now < cooled_after else timedelta()
+
     if request.method == 'POST':
-        try:
-            new_rid = auth.generate_referral(uid)
-            flash("New referral generated!")
-            return redirect(url_for('referrals', n=new_rid))
-        except auth.AuthError:
+
+        # can we generate a new invitation?
+        if cooldown:
             raise exceptions.TooManyRequests(
                 "You can't generate a referral right now."
             )
 
-    prefix = 'referral:'
-    context['referrals'] = sorted(
-        (timedelta(seconds=redis.ttl(k)), k[len(prefix):])
-        for k in redis.keys(prefix + '*')
-        if redis.get(k) == session['u']
-    )
+        # generate a new invitation
+        invitation = Invitation(creator=g.user)
+        db.session.add(invitation)
+        db.session.commit()
+
+        flash("New referral generated!")
+        return redirect(url_for('referrals', n=invitation.id))
+
+    invitations = g.user.invitations.order_by(Invitation.created.desc()).all()
+    invitations = [
+        (invitation.id, exp:=(invitation.created + timedelta(days=7)))
+        for invitation in invitations
+        if now < exp
+    ]
 
     try:
         query = urlparse(request.full_path).query
-        context["new_rid"] = parse_qs(query)['n'][0]
+        context["new"] = parse_qs(query)['n'][0]
     except KeyError:
         pass
 
-    cooldown = redis.ttl(f'referral_cooldown:{uid}')
-    if cooldown >= 0:
-        context['referral_cooldown'] = timedelta(seconds=max(cooldown, 1))
-
-    return render_template('referrals.html', auth=auth, **context)
+    return render_template(
+        'referrals.html',
+        auth=auth,
+        cooldown=cooldown,
+        invitations=invitations,
+        **context,
+    )
 
 
 @app.route_delete('/referrals', auth, name="all referrals")

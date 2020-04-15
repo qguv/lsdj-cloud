@@ -1,7 +1,8 @@
-from flask import request, redirect, url_for, flash, session, escape
+from flask import request, redirect, url_for, flash, session, escape, g
 from urllib.parse import urlparse, parse_qs
-from uuid import uuid4
+from uuid import uuid4, UUID
 from datetime import datetime
+from models.user import User
 
 from functools import wraps
 
@@ -11,7 +12,8 @@ class AuthError(Exception):
 
 
 class Auth:
-    def __init__(self, redis, bcrypt, token_ttl):
+    def __init__(self, db, redis, bcrypt, token_ttl):
+        self.db = db
         self.redis = redis
         self.bcrypt = bcrypt
         self.token_ttl = token_ttl
@@ -19,12 +21,28 @@ class Auth:
     def is_authenticated(self):
         try:
             uid = session['u']
-            print('uid is', uid)
             token = session['t']
-            print('token is', token)
-            return token == self.redis[f'token:{uid}']
         except KeyError:
             return False
+
+        try:
+            uid = UUID(uid)
+        except ValueError:
+            del session['u']
+            return False
+
+        try:
+            if token != self.redis[f'token:{uid}']:
+                return False
+        except KeyError:
+            return False
+
+        g.user = User.query.get(uid)
+        if g.user is None:
+            del session['t']
+            return False
+
+        return True
 
     def deauth(self):
         if not self.is_authenticated():
@@ -40,18 +58,6 @@ class Auth:
         token = str(uuid4())
         self.redis.setex(f'token:{uid}', self.token_ttl, token)
         return token
-
-    def generate_referral(self, uid):
-        if self.redis.exists(f'referral_cooldown:{uid}'):
-            return AuthError()
-
-        rid = str(uuid4())
-
-        # TODO atomic
-        self.redis.setex(f'referral:{rid}', 60 * 60 * 24 * 7, uid)
-        self.redis.setex(f'referral_cooldown:{uid}', 60 * 60 * 24, 1)
-
-        return rid
 
     def signup_form(self, *, success_redirect: str):
         def decorator(wrapped):

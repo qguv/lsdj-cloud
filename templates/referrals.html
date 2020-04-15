@@ -1,31 +1,34 @@
 {% extends 'base.html' %}
-{% block title %}Referral codes{% endblock title %}
+{% block title %}Invite codes{% endblock title %}
 {% block content %}
 
 <p>
-  Referral codes let you invite your friends to this site! Each referral lasts
-  a week and can be used only once. You can make a new one each day.
+  Invite links let you invite your friends to this site! Each invitation
+  lasts a week and can be used only once. You can make a new one each day.
 </p>
 
 <ul>
-  {%- for ttl, rid in referrals %}
+  {%- for id, ttl in invitations %}
     <li>
-      <a class="referral{% if new_rid and new_rid == rid %} strong{% endif %}" href="{{ url_for('signup', rid=rid) }}">{{ rid }}</a>
+      <a class="invitation{% if new and new == id %} strong{% endif %}" href="{{ url_for('signup', rid=id) }}">{{ id }}</a>
       (expires in <span class="timedelta" data-seconds="{{ ttl.total_seconds() }}">{{ ttl }}</span>)
-      <a class="delete" href="{{ url_for('referral_delete', name=rid) }}">delete?</a>
+      <a class="delete" href="{{ url_for('referral_delete', name=id) }}">delete?</a>
     </li>
   {%- endfor %}
 </ul>
 
-{%- if referral_cooldown -%}
-<p>Time remaining until you can generate another referral: <span class="timedelta" data-seconds="{{ referral_cooldown.total_seconds() }}">{{ referral_cooldown }}</span>.</p>
+{%- if cooldown -%}
+<p>
+  Time remaining until you can generate another invite link:
+  <span class="timedelta" data-seconds="{{ cooldown.total_seconds() }}">{{ cooldown }}</span>.
+</p>
 {%- else %}
 <form action="{{ url_for('referrals') }}" method="POST" enctype="multipart/form-data">
   <button>Create new referral</button>
 </form>
 {%- endif %}
 
-{%- if referrals or referral_cooldown %}
+{%- if invitations or cooldown %}
 <script src="{{ url_for('static', filename='timedelta.js') }}"></script>
 {%- endif %}
 
