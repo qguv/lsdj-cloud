@@ -2,6 +2,7 @@ from lib.db import db
 
 
 class User(db.Model):
+
     invitations = db.relationship(
         'Invitation',
         back_populates='creator',
@@ -16,4 +17,8 @@ class User(db.Model):
     handle = db.Column(db.String(80), unique=True, nullable=False)
     phash = db.Column(db.Binary(60), nullable=False)
 
-    last_login_on = db.Column(db.DateTime, nullable=False)
+    last_login_on = db.Column(db.DateTime, nullable=True)
+
+    def __init__(self, handle, phash):
+        self.handle = handle
+        self.phash = phash

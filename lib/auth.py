@@ -1,8 +1,10 @@
 from flask import request, redirect, url_for, flash, session, escape, g
+from lib.db import db
 from urllib.parse import urlparse, parse_qs
 from uuid import uuid4, UUID
 from datetime import datetime
 from models.user import User
+from models.invitation import Invitation
 
 from functools import wraps
 
@@ -70,22 +72,16 @@ class Auth:
                         try:
                             handle = request.form['h']
                             password = request.form['p']
-                            rid = request.form['r']
+                            invitation_id = request.form['i']
                         except KeyError:
                             raise AuthError()
 
-                        if not rid:
+                        if not invitation_id:
                             raise AuthError()
 
                         if len(handle) < 3:
                             raise AuthError(
                                 "Handle must be at least 3 characters!"
-                            )
-
-                        if self.redis.hget('handles', handle) is not None:
-                            raise AuthError(
-                                "That handle is taken! Please choose a "
-                                "different one."
                             )
 
                         if len(password) < 8:
@@ -94,30 +90,38 @@ class Auth:
                                 "characters!"
                             )
 
-                        ruid = self.redis.get(f'referral:{rid}')
-                        if ruid is None:
-                            raise AuthError("Referral code is not valid")
-                        self.redis.delete(f'referral:{rid}')
+                        if password.lower() in ['password', handle.lower()]:
+                            return AuthError(
+                                "C'mon, pick a better password"
+                            )
 
-                        uid = self.redis.incr('user_last')
+                        invitation = Invitation.query.get(invitation_id)
+                        if invitation is None:
+                            raise AuthError("Invitation is not valid")
+
+                        if invitation.consumer:
+                            raise AuthError("Invitation has been used already")
+
+                        now = datetime.utcnow()
+                        if invitation.expires <= now:
+                            db.session.delete(invitation)
+                            raise AuthError("Invitation has expired")
+
                         phash = self.bcrypt.generate_password_hash(password)
-                        token = self.generate_token(uid)
-                        now = int(datetime.utcnow().timestamp())
+                        user = User(handle, phash)
+                        user.last_login_on = now
 
-                        self.redis.hset('handles', handle, uid)
-                        self.redis.hset(f'user:{uid}', 'handle', handle)
-                        self.redis.hset(f'user:{uid}', 'phash', phash)
-                        self.redis.hset(f'user:{uid}', 'joined_at', now)
-                        self.redis.hset(f'user:{uid}', 'referred_by', ruid)
-                        self.redis.setex(
-                            f'referral_cooldown:{uid}',
-                            60 * 60 * 24,
-                            1,
-                        )
+                        invitation.used = now
+
+                        db.session.add(invitation)
+                        db.session.add(user)
+                        db.session.commit()
+
+                        token = self.generate_token(user.id)
 
                         # store session info
                         session['h'] = handle
-                        session['u'] = uid
+                        session['u'] = user.id
                         session['t'] = token
 
                         flash(f"Welcome aboard, {escape(handle)}!")
@@ -151,22 +155,23 @@ class Auth:
                         except KeyError:
                             raise AuthError()
 
-                        uid = self.redis.hget('handles', handle)
-                        if uid is None:
+                        user = User.query.filter_by(handle=handle).first()
+                        if user is None:
                             raise AuthError()
 
-                        phash = self.redis.hget(f'user:{uid}', 'phash')
-                        if phash is None:
+                        if not self.bcrypt.check_password_hash(user.phash, password):  # noqa: E501
                             raise AuthError()
 
-                        if not self.bcrypt.check_password_hash(phash, password):  # noqa: E501
-                            raise AuthError()
+                        token = self.generate_token(user.id)
 
-                        token = self.generate_token(uid)
+                        now = datetime.utcnow()
+                        user.last_login_on = now
+                        db.session.add(user)
+                        db.session.commit()
 
                         # store session info
                         session['h'] = handle
-                        session['u'] = uid
+                        session['u'] = user.id
                         session['t'] = token
 
                         flash(f"Welcome back, {escape(handle)}!")
