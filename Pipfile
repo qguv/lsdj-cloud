@@ -8,7 +8,7 @@ flake8 = "~=5.0"
 
 [packages]
 boto3 = "~=1.24"
-Flask = "~=2.2"
+Flask = "~=2.3"
 redis = "~=4.5"
 flask-bcrypt = "~=1.0"
 
