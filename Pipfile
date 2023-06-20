@@ -13,4 +13,4 @@ redis = "~=4.5"
 flask-bcrypt = "~=1.0"
 
 [requires]
-python_version = "3.8"
+python_version = "3.10"
